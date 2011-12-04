@@ -1,0 +1,55 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+
+/**
+  * This is for importing xml data to a SQLite table 
+  * @param node xml node
+  * @param user the user whos data this is
+  * 
+  */			 
+ public function importPostXML( node:XMLNode, dUser:UserVO ):void
+ {
+	var query:String = "INSERT INTO posts (" + 
+									"post_url," + 
+									"post_title," + 
+									"post_description," + 
+									"post_tags," + 
+									"post_shared," + 
+									"post_timestamp," + 
+									"post_replace," + 
+									"delicious_user )" + 
+							"VALUES ( " + 
+									":post_url," + 
+									":post_title," + 
+									":post_description," + 
+									":post_tags," + 
+									":post_shared," + 
+									":post_timestamp," + 
+									":post_replace," +
+									":delicious_user)";
+									
+	sqlImport = new SQLStatement();
+	
+	sqlImport.sqlConnection = dbconn;
+	sqlImport.addEventListener( SQLEvent.RESULT, onSQLSave );
+	sqlImport.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+	sqlImport.text = query;
+	
+	sqlImport.parameters[":post_url"] 				= node.attributes.href;
+	sqlImport.parameters[":post_title"] 			= node.attributes.description;
+	sqlImport.parameters[":post_description"] 		= node.attributes.extended;
+	sqlImport.parameters[":post_tags"] 				= node.attributes.tag;
+	sqlImport.parameters[":post_shared"]			= node.attributes.shared;
+	sqlImport.parameters[":post_timestamp"] 		= node.attributes.time;
+	sqlImport.parameters[":post_replace"]			= "no";
+	sqlImport.parameters[":delicious_user"] 		= dUser.username;
+	
+	sqlImport.execute();
+	
+	trace( "Importing XML to SQLite Database" );				
+ }

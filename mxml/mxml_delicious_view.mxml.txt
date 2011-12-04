@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" 
+	xmlns:chapter4="com.jonniespratley.advguidetoflex.chapter4.*" 
+	xmlns:delicious="com.jonniespratley.advguidetoflex.view.chapter4.delicious.*" verticalAlign="middle" horizontalAlign="center">
+	
+	<mx:Script>
+		<![CDATA[	
+			import com.jonniespratley.advguidetoflex.model.ModelLocator;
+			
+			[Bindable] private var model:ModelLocator = ModelLocator.getInstance();
+			
+		]]>
+	</mx:Script>		
+		<delicious:UserForm label="Login"/>	
+		
+		<mx:TabNavigator width="100%" height="100%" visible="{ model.isLoggedIn }" includeInLayout="{ model.isLoggedIn }">
+			<delicious:UserInfo id="userInfo" label="UserInfo"/>
+			<delicious:PostView id="postView" label="Bookmarks"/>
+			<delicious:TagView id="tagView" label="Tags"/>
+		</mx:TabNavigator>	
+</mx:HBox>

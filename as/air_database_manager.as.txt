@@ -1,0 +1,511 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.air.managers
+{
+	import com.jonniespratley.deliciousair.vo.DeliciousUser;
+	import com.jonniespratley.deliciousair.vo.Post;
+	import com.jonniespratley.deliciousair.vo.Tag;
+	
+	import flash.data.SQLConnection;
+	import flash.data.SQLResult;
+	import flash.data.SQLStatement;
+	import flash.events.SQLErrorEvent;
+	import flash.events.SQLEvent;
+	import flash.filesystem.File;
+	import flash.xml.XMLNode;
+	
+	import mx.collections.ArrayCollection;
+	
+	/**
+	 * Del.icio.us Air database manager for caching our tags, 
+	 * and for offline editablitiy. 
+	 * @author Jonnie
+	 * 
+	 */	
+	public class DatabaseManager
+	{
+		//DB Connection
+		private var dbconn:SQLConnection;
+		//Query Statement
+		private var sqlQuery:SQLStatement;		
+		//Create Table Statement
+		private var sqlCreateTable:SQLStatement;
+		//Insert Statement
+		private var sqlInsert:SQLStatement;
+		//Import Statement
+		private var sqlImport:SQLStatement;
+		
+		//Returned Data
+		[Bindable] private var sqlData:ArrayCollection;
+		
+		/**
+		 * Creates a database connection, registers event listeners, specifies the database filename
+		 * checks to see if the database exsists, if it does then we connection to it.
+		 * If it doesnt, then we create a new database file, and create our tables.
+		 * 
+		 * @constructor
+		 */		
+		public function DatabaseManager()
+		{
+			//Connect to the db
+			dbconn = new SQLConnection();
+				
+			//Add event listener
+			dbconn.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+			
+			//Set the location of the db file				
+			var dbFile:File = File.applicationStorageDirectory.resolvePath( "Delicious.db" );
+			
+			//Check if the db file exsists
+			if ( dbFile.exists )
+			{
+				//Connect to the db then
+				dbconn.addEventListener( SQLEvent.OPEN, onSQLOpen );
+			} else {
+				//Create the db
+				dbconn.addEventListener( SQLEvent.OPEN, onSQLCreate );	
+			}
+			//Execute
+			dbconn.openAsync( dbFile );			
+		}
+		
+		/**********************************************************
+			 *
+			 * ALL FUNCTIONS TO CREATE THE TABLES
+			 * users/tags/posts 
+			 * 
+			 **********************************************************/
+			 
+			/**
+			 * Handles creating the tags table 
+			 * 
+			 */			 
+			public function createTagTable():void
+			{
+				//The query to execute				
+				var query:String = "CREATE TABLE tags ( tag_id INT PRIMARY KEY , " + 
+														"tag VARCHAR , " + 
+														"tag_count VARCHAR , " + 
+														"tag_user VARCHAR )";
+				
+				//Make a new sql statement
+				sqlCreateTable = new SQLStatement();
+				
+				//Connect to the db				
+				sqlCreateTable.sqlConnection = dbconn;			
+				
+				//Set the sql to be executed
+				sqlCreateTable.text = query;
+				
+				//Execute it				
+				sqlCreateTable.execute();	
+				
+				trace( "Creating Tag Table query: " + query );			
+			}
+			
+			/**
+			 * Handles creating the posts table 
+			 * 
+			 */			
+			public function createPostTable():void
+			{	
+				//The query to execute		
+				var query:String = "CREATE TABLE 'posts'( " + 
+										"[post_id] integer(11) UNIQUE NOT NULL," + 
+										"[post_url] varchar(255) NOT NULL," + 
+										"[post_hash] varchar(255)," + 
+										"[post_desc] varchar(255) NOT NULL," + 
+										"[post_tags] varchar(255)," + 
+										"[post_time] varchar(255)," + 
+										"[post_extended] varchar(255)," + 
+										"[post_shared] varchar(255) DEFAULT yes," + 
+										"[post_replace] varchar(255) DEFAULT no," + 
+										"[post_user] varchar(255) NOT NULL, " + 
+										"Primary Key(post_id))";
+				
+				//Make a new sql statement
+				sqlCreateTable = new SQLStatement();
+				
+				//Connect to the db				
+				sqlCreateTable.sqlConnection = dbconn;				
+				
+				//Set the sql to be executed
+				sqlCreateTable.text = query;
+				
+				//Execute it				
+				sqlCreateTable.execute();	
+				
+				trace( "Creating Post Table query: " + query );		
+			}
+			
+			/**
+			 * Handles creating the users table 
+			 * 
+			 */			
+			public function createUserTable():void
+			{
+				//The query to execute	
+				var query:String = "CREATE TABLE users ( user_id INT PRIMARY KEY , " + 
+														"user_name VARCHAR , " + 
+														"user_pass VARCHAR , " + 
+														"user_url VARCHAR )";
+				
+				//Make a new sql statement
+				sqlCreateTable = new SQLStatement();
+								
+				//Connect to the db				
+				sqlCreateTable.sqlConnection = dbconn;						
+				
+				//Set the sql to be executed
+				sqlCreateTable.text = query;
+				
+				//Execute it				
+				sqlCreateTable.execute();	
+				
+				trace( "Creating User Table query: " + query );	
+					
+			}
+			
+			/**
+			 * Creates all tables unless they are already there 
+			 * 
+			 */			
+			public function createAllTables():void
+			{				
+				createPostTable();
+				
+				
+				trace( "Creating all tables" );	
+			}
+			
+			/**********************************************************
+			 * 
+			 * ALL SAVE CALLS TO SQL DATABASE
+			 * 
+			 **********************************************************/
+			 
+			 public function importPostXML( node:XMLNode ):void
+			 {
+			 	var query:String = "INSERT INTO posts ( " + 
+									 			"post_url , " + 
+									 			"post_hash" + 
+									 			"post_desc , " + 
+									 			"post_tags , " + 
+									 			"post_time , " + 
+									 			"post_extended , " + 
+									 			"post_shared , " + 
+									 			"post_replace , " + 
+									 			"post_user )" + 
+										"VALUES ( " + 
+												":post_url, " + 
+												":post_hash , " + 
+												":post_desc , " + 
+												":post_tags , " + 
+												":post_time , " + 
+												":post_extended , " + 
+												":post_shared , " + 
+												":post_replace ," +												
+												":post_user )";
+				sqlImport = new SQLStatement();
+				sqlImport.sqlConnection = dbconn;
+				sqlImport.addEventListener( SQLEvent.RESULT, onSQLSave );
+				sqlImport.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+				sqlImport.text = query;
+				
+				sqlImport.parameters[":post_url"] = node.attributes.href;
+				sqlImport.parameters[":post_hash"] = node.attributes.hash;
+				sqlImport.parameters[":post_desc"] = node.attributes.description;
+				sqlImport.parameters[":post_tags"] = node.attributes.tag;
+				sqlImport.parameters[":post_time"] = node.attributes.time;
+				sqlImport.parameters[":post_extended"] = node.attributes.extended;
+				sqlImport.parameters[":post_shared"] = node.attributes.shared;
+				sqlImport.parameters[":post_replace"] = node.attributes.replace;
+				sqlImport.parameters[":post_user"] = node.attributes.user;
+				
+				sqlImport.execute();
+				
+				trace( "Importing XML to SQLite Database" );				
+			 }
+			 
+			 
+			 
+			/**
+			 * Saves a post to the database by user and post
+			 * @param post The post to save
+			 * @param user The current user
+			 */			 
+			public function savePost( post:Post, user:DeliciousUser ):void
+			{		
+				var query:String = "INSERT INTO posts ( post_url , post_desc , post_extended , post_tags , post_time , post_replace , post_shared , post_user )" + 
+									"VALUES ( :post_url, :post_desc , :post_extended , :post_tags , :post_time , :post_replace , :post_shared , :post_user )";
+
+				sqlInsert = new SQLStatement();
+				sqlInsert.sqlConnection = dbconn;
+				sqlInsert.addEventListener( SQLEvent.RESULT, onSQLSave );
+				sqlInsert.addEventListener( SQLErrorEvent.ERROR, onSQLError );				
+				
+				sqlInsert.text = query;
+				sqlInsert.parameters[ ":post_url" ] = post.post_url;
+				sqlInsert.parameters[ ":post_desc" ] = post.post_description;
+				sqlInsert.parameters[ ":post_extended" ] = post.post_extended;
+				sqlInsert.parameters[ ":post_tags" ] = post.post_tag;
+				sqlInsert.parameters[ ":post_time" ] = post.post_date;
+				sqlInsert.parameters[ ":post_replace" ] = post.post_replace;
+				sqlInsert.parameters[ ":post_shared" ] = post.post_shared;
+				sqlInsert.parameters[ ":post_user" ] = user.user_name;
+	
+				sqlInsert.execute();	
+				
+				trace( "Save post query: " + query );						
+			}
+			
+			/**
+			 * Saves a tag to the database 
+			 * @param tag The tag to save
+			 * @param user The current user
+			 * 
+			 */			
+			public function saveTag( tag:Tag, user:DeliciousUser ):void
+			{				 
+				var query:String = "INSERT INTO tags ( tag , tag_count , tag_user )" + 
+									"VALUES ( :tag , :tag_count, :tag_user )";
+
+				sqlInsert = new SQLStatement();
+				sqlInsert.sqlConnection = dbconn;				
+				sqlInsert.addEventListener( SQLEvent.RESULT, onSQLSave );
+				sqlInsert.addEventListener( SQLErrorEvent.ERROR, onSQLError );				
+				
+				sqlInsert.text = query;				
+				sqlInsert.parameters[ ":tag" ] = tag.tag;
+				sqlInsert.parameters[ ":tag_count" ] = tag.tag_count; 
+				sqlInsert.parameters[ ":tag_user" ] = user.user_name;
+				
+				sqlInsert.execute();
+				
+				trace( "Save tag query: " + query );							
+			}
+			
+			/**
+			 * Saves a user to the database 
+			 * @param user The current user
+			 * 
+			 */			
+			public function saveUser( user:DeliciousUser ):void
+			{				
+				var query:String = "INSERT INTO users ( user_name , user_pass , user_url ) " + 
+									"VALUES ( :username , :password , :url )";
+
+				sqlInsert = new SQLStatement();
+				sqlInsert.sqlConnection = dbconn;
+				sqlInsert.addEventListener( SQLEvent.RESULT, onSQLSave );
+				sqlInsert.addEventListener( SQLErrorEvent.ERROR, onSQLError );				
+				
+				sqlInsert.text = query;
+				sqlInsert.parameters[ ":username" ] = user.user_name
+				sqlInsert.parameters[ ":password" ] = user.user_pass
+				sqlInsert.parameters[ ":url" ] =      user.user_feed;
+				
+				sqlInsert.execute();
+				
+				trace( "Save user query: " + query );				
+			}
+			
+			/**********************************************************
+			 * 
+			 * ALL SELECT CALLS TO OUR 3 DATABASES
+			 * 
+			 **********************************************************/
+			 
+			/**
+			 * Selects the user by argument 
+			 * @param args 
+			 * 
+			 */			 
+			public function selectUser( args:String = "*" ):void
+			{
+				var query:String = "SELECT " + args + " FROM users";
+				
+				sqlQuery = new SQLStatement();
+				sqlQuery.sqlConnection = dbconn;
+				sqlQuery.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+				sqlQuery.addEventListener( SQLEvent.RESULT, onSQLResult_data );
+				
+				sqlQuery.text = query;
+				
+				sqlQuery.execute();
+				
+				trace( "Select user query: " + query );
+			}
+			
+			/**
+			 * Selects all tags 
+			 * @param args by the argument
+			 * 
+			 */			
+			public function selectTag( args:String = "*" ):void
+			{
+				var query:String = "SELECT " + args + " FROM tags";
+				
+				sqlQuery = new SQLStatement();
+				sqlQuery.sqlConnection = dbconn;
+				sqlQuery.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+				sqlQuery.addEventListener( SQLEvent.RESULT, onSQLResult_data );
+				
+				sqlQuery.text = query;
+				
+				sqlQuery.execute();
+				
+				trace( "Select tags query: " + query );
+			}
+			
+			/**
+			 * Selects all posts 
+			 * @param args by the argument
+			 * 
+			 */			
+			public function selectPost( args:String = "*" ):void
+			{
+				var query:String = "SELECT " + args + " FROM posts";
+				
+				sqlQuery = new SQLStatement();
+				sqlQuery.sqlConnection = dbconn;
+				sqlQuery.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+				sqlQuery.addEventListener( SQLEvent.RESULT, onSQLResult_data );
+				
+				sqlQuery.text = query;
+				
+				sqlQuery.execute();
+				
+				trace( "Select posts query: " + query );
+			}
+			
+			/**
+			 * Retrieves all post for current user 
+			 * @param user The current user that is logged in
+			 * 
+			 */			
+			public function getPostsForUser( user:DeliciousUser ):void
+			{
+				var query:String = "SELECT * FROM posts WHERE post_user = '" + user.user_name + "'";				
+
+				sqlQuery = new SQLStatement();
+				sqlQuery.sqlConnection = dbconn;				
+				sqlQuery.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+				sqlQuery.addEventListener( SQLEvent.RESULT, onSQLResult_data );
+				
+				sqlQuery.text = query;
+				
+				sqlQuery.execute();
+				
+				trace( "Posts for User query: " + query );
+			}
+			
+			/**********************************************************
+			 *
+			 * ALL FUNCTIONS TO DELETE SELECTED DATA
+			 * users/tags/posts 
+			 * 
+			 **********************************************************/
+			 
+			/**
+			 * Deletes a post by the ID 
+			 * @param id
+			 * 
+			 */			 
+			public function deletePost( id:Number ):void
+			{
+				var query:String = "DELETE FROM posts" + 
+									"WHERE post_id = :post_id";
+						
+				sqlInsert = new SQLStatement();
+				sqlInsert.sqlConnection = dbconn;				
+				sqlInsert.addEventListener( SQLEvent.RESULT, onSQLSave );
+				sqlInsert.addEventListener( SQLErrorEvent.ERROR, onSQLError );			
+				
+				sqlInsert.text = query;
+				sqlInsert.parameters[ ":post_id" ] =  id;				
+				
+				sqlInsert.execute();
+				
+				trace( "Deleted post: " + id );						
+			}
+			
+			
+			
+			
+			
+			
+			
+			/**********************************************************
+			 * 
+			 * ALL SQL RESULT AND EVENT HANDLERS
+			 * 
+			 **********************************************************/
+			 
+			/**
+			 * Handles the DB Query result 
+			 * @param event
+			 * 
+			 */			 
+			private function onSQLResult_data( event:SQLEvent ):void
+			{
+				var result:SQLResult = sqlQuery.getResult();
+				sqlData = new ArrayCollection();
+				
+			}			
+			
+			
+			/**
+			 * Handles the Insert result 
+			 * @param event
+			 * 
+			 */			
+			private function onSQLSave( event:SQLEvent ):void
+			{
+				trace( "The record was successfully saved. " );
+			}
+			
+			
+			/**
+			 * Handles the DB Open result 
+			 * @param event
+			 * 
+			 */			
+			private function onSQLOpen( event:SQLEvent ):void
+			{
+				trace( "Database was opened successfully." );
+				
+			}
+			
+			/**
+			 * Hanles the DB Create result
+			 * @param event
+			 * 
+			 */			
+			private function onSQLCreate( event:SQLEvent ):void
+			{
+				trace( "Database was created successfully." );
+				createPostTable();
+				createTagTable();
+				createUserTable();
+			}
+			
+			/**
+			 * Handles the DB Error result 
+			 * @param event
+			 * 
+			 */			
+			private function onSQLError( event:SQLErrorEvent ):void
+			{
+				var errorString:String = "SQL Error: " + event.error.errorID + "\nDetails: " + event.error.details;
+				trace( errorString );
+			}
+			
+
+	}
+}

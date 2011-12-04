@@ -1,0 +1,146 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+//DB Connection
+private var dbconn:SQLConnection;
+
+//Query Statement
+private var sqlQuery:SQLStatement;	
+	
+//Create Table Statement
+private var sqlCreateTable:SQLStatement;
+
+//Insert Statement
+private var sqlInsert:SQLStatement;
+
+//Import Statement
+private var sqlImport:SQLStatement;
+
+//Returned Data
+[Bindable] private var sqlData:ArrayCollection;
+
+/**
+ * Creates a database connection, registers event listeners, specifies the database filename
+ * checks to see if the database exsists, if it does then we connection to it.
+ * If it doesnt, then we create a new database file, and create our tables.
+ * 
+ * @constructor
+ */		
+public function connect():void
+{
+	//Connect to the db
+	dbconn = new SQLConnection();
+		
+	//Add event listener
+	dbconn.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+	
+	//Set the location of the db file				
+	var dbFile:File = File.applicationStorageDirectory.resolvePath( "Delicious.db" );
+	
+	//Check if the db file exsists
+	if ( dbFile.exists )
+	{
+		//Connect to the db then
+		dbconn.addEventListener( SQLEvent.OPEN, onSQLOpen );
+	} else {
+		//Create the db
+		dbconn.addEventListener( SQLEvent.OPEN, onSQLCreate );	
+	}
+	//Execute
+	dbconn.openAsync( dbFile );			
+}
+
+/**
+ * Handles creating the tags table 
+ * 
+ */			 
+public function createTagTable():void
+{
+	//The query to execute				
+	var query:String = "CREATE TABLE tags ( tag_id INT PRIMARY KEY , " + 
+											"tag VARCHAR , " + 
+											"tag_count VARCHAR , " + 
+											"tag_user VARCHAR )";
+	
+	//Make a new sql statement
+	sqlCreateTable = new SQLStatement();
+	
+	//Connect to the db				
+	sqlCreateTable.sqlConnection = dbconn;			
+	
+	//Set the sql to be executed
+	sqlCreateTable.text = query;
+	
+	//Execute it				
+	sqlCreateTable.execute();	
+	
+	trace( "Creating Tag Table query: " + query );			
+}
+					
+
+/**********************************************************
+ * 
+ * ALL SQL RESULT AND EVENT HANDLERS
+ * 
+ **********************************************************/
+ 
+/**
+ * Handles the DB Query result 
+ * @param event
+ * 
+ */			 
+private function onSQLResult_data( event:SQLEvent ):void
+{
+	var result:SQLResult = sqlQuery.getResult();
+	sqlData = new ArrayCollection();
+	
+}			
+
+
+/**
+ * Handles the Insert result 
+ * @param event
+ * 
+ */			
+private function onSQLSave( event:SQLEvent ):void
+{
+	trace( "The record was successfully saved. " );
+}
+
+
+/**
+ * Handles the DB Open result 
+ * @param event
+ * 
+ */			
+private function onSQLOpen( event:SQLEvent ):void
+{
+	trace( "Database was opened successfully." );
+	
+}
+
+/**
+ * Hanles the DB Create result
+ * @param event
+ * 
+ */			
+private function onSQLCreate( event:SQLEvent ):void
+{
+	trace( "Database was created successfully." );
+	createTagTable();
+}
+
+/**
+ * Handles the DB Error result 
+ * @param event
+ * 
+ */			
+private function onSQLError( event:SQLErrorEvent ):void
+{
+	var errorString:String = "SQL Error: " + event.error.errorID + "\nDetails: " + event.error.details;
+	trace( errorString );
+}

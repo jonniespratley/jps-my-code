@@ -1,0 +1,167 @@
+<?php
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+class SnipprService
+{
+	
+	private $table = "snippets";
+		
+	public function SnipprService()
+	{
+		mysql_connect("localhost", "spratley_guest", "guest");
+		mysql_select_db("spratley_snippr") ;	
+	}
+
+
+	private function mapRecordSet( $recordset )
+	{
+		require_once( "../vo/SnippetVO.php" );
+		$list = array();
+		
+		while( $data = mysql_fetch_array( $recordset ) )
+		{
+			$vo = new SnippetVO( $data );
+			array_push( $list, $vo );
+			
+		}		
+		return $vo;	
+	}	
+
+
+	public function getSnippets()
+	{
+		//We must specify our vo, because we need to map correctly
+		require_once( "../vo/SnippetVO.php" );
+		
+		$sql = mysql_query( "SELECT * FROM ". $this->table. "" );
+		
+		$result = array();
+
+		while( $snip = mysql_fetch_array( $sql ) )
+		{
+			//Create a new snippet vo
+			$snippet = new SnippetVO( $snip );
+				
+			//Result is a snippet
+			$result[] = $snippet;
+		}
+		//Print out the result
+		return $result;
+	}
+
+	//This is used for returning the created or updated snippet for flex
+	public function getOne( $id )
+	{
+		$rs = mysql_query( "SELECT * FROM ".$this->table." WHERE snippet_id = ".$id );
+		//Map the recordset to our vo
+		$list = $this->mapRecordSet( $rs );
+		//Return our vo
+		return $list;		
+	}
+	
+	//Creates a new snippet
+	public function saveSnippet( $snippet )
+	{
+		require_once( "../vo/SnippetVO.php" );
+		//Check to see if the snippet has an id of 0
+		if ( $snippet[snippet_id] == 0 ) 
+		{
+		$query = "INSERT INTO ".$this->table."
+								( snippet_title,
+								snippet_code,
+								snippet_type,
+								snippet_created,
+								snippet_user )		
+								VALUES (
+								'".mysql_real_escape_string($snippet[snippet_title])."',
+								'".mysql_real_escape_string($snippet[snippet_code])."',
+								'".mysql_real_escape_string($snippet[snippet_type])."',
+								'".mysql_real_escape_string($snippet[snippet_created])."',
+								'".mysql_real_escape_string($snippet[snippet_user])."')";
+		if( !mysql_query( $query ) ) 
+		{		
+			return false;
+		}				
+			return $this->getOne( mysql_insert_id() );
+			
+			} else {
+					$id = $snippet[snippet_id];
+			
+					$query = "UPDATE ".$this->table." SET 
+					snippet_title = '".mysql_real_escape_string($snippet[snippet_title])."',
+					snippet_code = '".mysql_real_escape_string($snippet[snippet_code])."',
+					snippet_type = '".mysql_real_escape_string($snippet[snippet_type])."',
+					snippet_created = '".mysql_real_escape_string($snippet[snippet_created])."',
+					snippet_user = '".mysql_real_escape_string($snippet[snippet_user])."'
+			
+					WHERE snippet_id =". $id;
+				
+					if( !mysql_query( $query ) )
+					{		
+						return false;		
+					}				
+					//Return the created snippet
+					return $this->getOne( $id );				
+				}				
+	}
+
+	public function removeSnippet($id)
+	{
+		$sql = mysql_query( "DELETE FROM ".$this->table." WHERE snippet_id = ".$id );
+		
+		if( !$sql )
+		{
+		//	trigger_error("Unable to delete Snippets", E_USER_ERROR);
+			return "There was an error removing this snippet";
+		}
+		else return $id;		
+	}
+	
+	
+	public function search( $arr )
+	{
+		$keywords = $arr[0];
+		$offset  = $arr[1];
+		$this->offset = ($arr[1] > 0) ? $arr[1] : $this->offset;
+		
+		$get_count = mysql_query("SELECT snippet_id FROM ".$this->table."
+								  WHERE ( snippets.snippet_title OR snippets.snippet_code ) 
+								  LIKE ( '$keywords' )");
+									
+		$count = mysql_num_rows( $get_count );
+		$total_snippets = array( 
+								array(
+									'totalProducts'=>$count, 
+									'offset' => $this->offset, 
+									'pageSize' => $this->pagesize 
+									) 
+								);
+		
+		$search = "SELECT * FROM products
+					   WHERE ( snippets.snippet_title OR snippets.snippet_code )
+					   LIKE ( '$keywords' ) ORDER BY snippet_id ASC
+					   LIMIT  $this->offset, $this->pagesize";
+						   
+					
+		$snippets = mysql_query( $search );
+			
+		if ( $snippets ) 
+		{
+			while( $row = mysql_fetch_object( $snippets ) )
+		{
+			$results[] = $row;
+		} 
+			$return  = array_merge( $results, $total_snippets );
+		} else {
+			$return = array('DEBUG_OUTPUT', mysql_error());
+		} 
+		return $return;
+	} 
+
+}
+?>

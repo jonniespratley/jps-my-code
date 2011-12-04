@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" creationComplete="init()" xmlns:ns1="com.jonniespratley.advguidetoflex.view.chapter1.twitter.*">
+	<mx:Script>
+		<![CDATA[
+			import com.jonniespratley.advguidetoflex.model.ModelLocator;
+			import com.jonniespratley.advguidetoflex.webapis.TwitterAMFPHPService;
+			import mx.managers.CursorManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.utils.ArrayUtil;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.rpc.events.ResultEvent;			
+			
+			//Create a variable for our service			
+			private var service:TwitterAMFPHPService;
+						
+			//Create our data collection
+			[Bindable] private var model:ModelLocator = ModelLocator.getInstance();
+			
+			/* Create a new connection to our endpoint */
+			private function init():void
+			{
+				service = new TwitterAMFPHPService( "http://localhost/AdvancedGuideToFlex/amfphp/gateway.php" );
+			}						
+			
+			/*Get featured posts*/
+			private function getFeatured():void
+			{
+				service.getFeatured();
+			}		
+			
+			//Handle the fault for now
+			private function onFault( fault:Object ):void
+			{
+				Alert.show( "There was a fault" );
+			}
+			
+			/* Check if the Twitter User is real */
+			private function doLogin():void
+			{
+				service.checkCredentials( txt_username.text, txt_password.text );
+			}
+			
+			//Gets all of our friends
+			private function getFriends():void
+			{
+				service.getFriends( txt_username.text, txt_password.text );
+			}
+			
+			//Gets my friends timeline
+			private function getMyFriendsTimeline():void
+			{
+				service.getFriendsTimeline( txt_username.text, txt_password.text );
+			}
+			
+			//Updates our status on Twitter.com
+			private function updateStatus():void
+			{
+				service.updateStatus( txt_message.text, txt_username.text, txt_password.text, txt_source.selectedLabel );
+			}
+		
+		]]>
+	</mx:Script>
+		<mx:HBox width="100%">
+				<mx:LinkBar width="100%" dataProvider="{ vs_twitter }"/>
+			
+				<mx:Label text="{ model.callResult }" fontWeight="bold" fontSize="14"/>
+		</mx:HBox>
+
+	<mx:HBox width="100%" height="100%">
+		<mx:HDividedBox width="100%" height="100%">
+			<mx:ViewStack id="vs_twitter" width="100%" height="100%">
+				<mx:VBox label="Login" width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+					
+					<mx:Form id="form_login">	
+						<mx:FormHeading label="Twitter Account Info"/>
+						
+						<!--Twitter Username-->
+						<mx:FormItem label="Username:" required="true">
+							<mx:TextInput id="txt_username" 
+								text=""/>
+						</mx:FormItem>
+						
+						<!--Twitter Password-->
+						<mx:FormItem label="Password:" required="true">
+							<mx:TextInput id="txt_password" 
+								displayAsPassword="true" 
+								text=""/>
+						</mx:FormItem>							
+						
+						<!--Call Buttons-->
+						<mx:FormItem width="100%" horizontalAlign="right" direction="horizontal">				
+							<mx:Button label="Login"
+								click="doLogin()"/>
+						</mx:FormItem>
+					</mx:Form>
+					
+				</mx:VBox>
+				<mx:VBox label="Update Status" width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+				
+					<mx:Form id="form_status" visible="{ model.isLoggedIn }">
+							<mx:FormHeading label="Update Status"/>
+							
+							<mx:FormItem label="What are you doing?">
+									<mx:TextArea id="txt_message"
+										maxChars="140"/>
+							</mx:FormItem>
+							
+							<mx:FormItem label="Sent From:">
+								<mx:ComboBox id="txt_source">
+									<mx:String>Mobile</mx:String>
+									<mx:String>Computer</mx:String>
+									<mx:String>Twitter</mx:String>
+								</mx:ComboBox>
+							</mx:FormItem>
+							
+							<mx:FormItem>
+								<mx:Button label="Update"
+									click="updateStatus()"/>
+							</mx:FormItem>
+					</mx:Form>
+					
+				</mx:VBox>
+				<mx:VBox label="Make Calls" width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+				
+					<mx:Form id="form_calls" visible="{ model.isLoggedIn }">
+						<mx:FormHeading label="Services"/>
+						
+						<!--Gets Our Friends-->
+						<mx:FormItem label="Get Friends:">
+							<mx:Button 
+								label="Call"
+								click="getFriends()"/>				
+						</mx:FormItem>
+						
+						<!--Gets Our Friends Timeline-->
+						<mx:FormItem label="Get My Friends Timeline:">				
+							<mx:Button 
+								label="Call"
+								click="getMyFriendsTimeline()"/>
+						</mx:FormItem>
+						
+						<!--Gets Featured Users (never me :/ )-->
+						<mx:FormItem label="Get Featured:">
+							<mx:Button 
+								label="Call"
+								click="getFeatured()"/>				
+						</mx:FormItem>
+						
+					</mx:Form>
+				</mx:VBox>
+			</mx:ViewStack>			
+		</mx:HDividedBox>
+	</mx:HBox>	
+</mx:VBox>

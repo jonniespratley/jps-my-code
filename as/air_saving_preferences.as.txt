@@ -1,0 +1,80 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+
+import com.adobe.air.preferences.PreferenceChangeEvent;
+import com.adobe.air.preferences.Preference;
+
+/* Create a new prefernce variable and give it a name */
+private var prefs:Preference =  new Preference( "settings.obj" );
+
+/* Create a new bytearry to store the data */
+private var byteArray:ByteArray = new ByteArray();
+
+/* Create a new fileStream variable to open up the local file system */
+private var fileStream:FileStream;
+
+/* Register some event listeners to see when the prefrences change */
+private function init():void
+{				
+	prefs.addEventListener( PreferenceChangeEvent.PREFERENCE_CHANGED_EVENT, onPrefChange );
+	checkSettings();
+}
+
+/* When they change, set the action to edit, and update the files */
+private function onPrefChange( event:PreferenceChangeEvent ):void
+{
+	if ( event.action == PreferenceChangeEvent.ADD_EDIT_ACTION )
+	{
+		//The new value
+		trace( event.newValue );
+		
+	} else if ( event.action == PreferenceChangeEvent.DELETE_ACTION )
+	{
+		//The old value
+		trace( event.oldValue );
+	}
+	
+}			
+
+/* Save the settings, it the checkbox is selected then lets save it */
+private function saveSettings():void
+{
+	if ( cb_remember.selected )
+	{
+		/* preferences variable, give it a name, set the value, encyrpted or not */
+		prefs.setValue( "username", txt_username.text, false );
+		prefs.setValue( "password", txt_password.text, true );
+		prefs.setValue( "remember", cb_remember.selected, false );
+						
+		prefs.save();
+	} else {
+		//Do nothing
+	}				
+	//Saved or Edited preferences
+	trace( prefs );
+}		
+
+/* 
+When the application loads, check the settings to see if anything has changed, if it has, set the value
+of the new values to the values of the inputs 
+*/
+private function checkSettings():void
+{			
+	prefs.load();				
+	txt_username.text = prefs.getValue( "username" );
+	txt_password.text = prefs.getValue( "password" );
+	cb_remember.selected = prefs.getValue( "remember" );
+}
+
+//Clear settings, and start from scratch
+private function clearSettings():void
+{
+	txt_username.text = "";
+	txt_password.text = "";
+	cb_remember.selected = false;
+}

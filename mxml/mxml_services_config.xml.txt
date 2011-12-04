@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<services-config>
+<services>
+    <service id="amfphp-flashremoting-service" 
+        class="flex.messaging.services.RemotingService" 
+        messageTypes="flex.messaging.messages.RemotingMessage">
+				
+        <!-- AMFPHP Destination -->
+        <destination id="amfphp">
+            <channels>
+                <channel ref="amfphp"/>
+            </channels>
+            <properties>
+                <source>*</source>
+            </properties>
+        </destination>
+         <!-- AMFPHP Destination -->
+        <destination id="weborb">
+            <channels>
+                <channel ref="weborb"/>
+            </channels>
+            <properties>
+                <source>*</source>
+            </properties>
+        </destination>            
+    </service>
+</services>
+    <channels>
+         <channel-definition id="amfphp" class="mx.messaging.channels.AMFChannel">
+            <endpoint 
+            	uri="http://localhost/AdvancedGuideToFlex/amfphp/gateway.php" 
+            	class="flex.messaging.endpoints.AMFEndpoint"/>
+        </channel-definition>
+        
+         <channel-definition id="weborb" class="mx.messaging.channels.AMFChannel">
+            <endpoint 
+            	uri="http://localhost/snippr/weborb-php-3.5/weborb.php" 
+            	class="flex.messaging.endpoints.AMFEndpoint"/>
+        </channel-definition>
+	</channels>		
+</services-config>

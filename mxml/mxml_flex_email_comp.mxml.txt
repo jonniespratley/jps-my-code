@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="350" 
+	showCloseButton="true"
+	close="PopUpManager.removePopUp( this )"
+	creationComplete="init()" 
+	title="Send a Email">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.validators.Validator;
+			import mx.managers.PopUpManager;
+			import com.jonniespratley.snippr.vo.EmailVO;
+			import com.jonniespratley.snippr.services.SnipprService;
+			
+			
+			/* Our ServiceProxy variable */
+			private var service:SnipprService;
+			
+			/* Our validation array to hold the values of our validators */
+			[Bindable] private var validators:Array = new Array();			
+			
+			/* When the component creation completes create a new service */
+			private function init():void
+			{
+				service = new SnipprService();
+				
+				validators = [ toV, fromV, subjectV, messageV ];
+			}
+			
+			/*
+			 * -> When the save button is clicked instead of sending the data right away
+			 * we first check it to see if it is indeed valid. If our validation array
+			 * is empty, then we can go ahead and send our value object to amfphp, other
+			 * wise we need to alert the user that there are some errors in the form
+			 */
+			private function checkForm():void
+			{
+				var vals:Array = new Array();
+					vals = Validator.validateAll( validators );
+				
+				//If no errors
+				if ( vals.length == 0 )
+				{
+					//Send the Email
+					sendEmail();
+				
+				} else {
+					Alert.show( "Please correct invalid form inputs", "Validation Error" );
+				}
+			}
+			
+			/*
+			 * -> When called we take our emailVO and build it up with the
+			 * values from the inputs then we call the sendEmail(email) function
+			 * in our SnipprService file, passing the packaged emailVO as the 
+			 * required argument.  
+			 */
+			private function sendEmail():void
+			{
+				/* Build up the value object for sending */
+			var	emailVO:EmailVO = new EmailVO() 
+				emailVO.email_to 		= txt_emailTo.text 
+				emailVO.email_from 		= txt_emailFrom.text
+				emailVO.email_subject 	= txt_emailSubject.text 
+				emailVO.email_message 	=	txt_emailMessage.text
+										
+				/* Call the service passing the emailVO as the argument */
+				service.sendEmail( emailVO );
+			}
+					
+			
+			/* Resets the form and clears any validation */
+			private function resetForm():void
+			{
+				txt_emailTo.text = "";
+				txt_emailFrom.text = "";
+				txt_emailMessage.text = "";
+				txt_emailSubject.text = "";
+				txt_responseMessage.text = "";
+			}
+			
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Form width="100%" height="100%">
+		<!--Email To-->		
+		<mx:FormItem label="To:" 
+			width="100%" required="true">
+			<mx:TextInput id="txt_emailTo" 
+				width="100%"/>
+		</mx:FormItem>
+		
+		<!--Email From-->		
+		<mx:FormItem label="From:" 
+			width="100%" required="true">
+			<mx:TextInput id="txt_emailFrom" 
+				width="100%"/>
+		</mx:FormItem>
+		
+		<!--Email Subject-->
+		<mx:FormItem label="Subject:"
+			width="100%" required="true">
+			<mx:TextInput id="txt_emailSubject" 
+				width="100%"/>				
+		</mx:FormItem>
+		
+		<!--Email Message-->
+		<mx:FormItem label="Message:" 
+			width="100%" 
+			height="100%" required="true">
+			<mx:TextArea id="txt_emailMessage" 
+				width="100%" 
+				height="100%"/>
+		</mx:FormItem>		
+	</mx:Form>
+	
+	<mx:ControlBar horizontalAlign="right" verticalAlign="middle">		
+		
+		<!--Cancel Button-->
+		<mx:Button id="btn_cancel" 
+			label="Cancel" 
+			click="resetForm()"/>
+		
+		<!--Response Message-->
+		<mx:Text id="txt_responseMessage" 
+			width="100%" 
+			fontSize="14" 
+			color="#4F0A59" 
+			fontWeight="bold" 
+			textAlign="center"/>
+		
+		<!--Send Button-->		
+		<mx:Button id="btn_send" 
+			label="Send" 
+			click="checkForm()"/>
+	</mx:ControlBar>
+
+	<!-- Validators -->
+	<mx:EmailValidator id="toV"
+		source="{ txt_emailTo }"
+		required="true"
+		property="text"/>
+	<mx:EmailValidator id="fromV"
+		source="{ txt_emailFrom }"
+		required="true"
+		property="text"/>
+	<mx:StringValidator id="subjectV"
+		source="{ txt_emailSubject }"
+		minLength="3"
+		maxLength="50"
+		required="true"
+		property="text"/>
+	<mx:StringValidator id="messageV"
+		source="{ txt_emailMessage }"
+		minLength="5"
+		maxLength="5000"
+		required="true"
+		property="text"/>		
+</mx:TitleWindow>

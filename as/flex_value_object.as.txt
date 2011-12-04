@@ -1,0 +1,36 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+ package com.jonniespratley.snippr.vo
+{	
+	[RemoteClass(alias="vo.SnippetVO")]
+	
+	/**
+ 	* VOs are used to create a layer of business objects that can be 
+ 	* transferred between tiers, instead of using records, results sets, and datasets.
+ 	*/
+	[Bindable]
+	public class SnippetVO
+	{
+		public var snippet_id:int;
+		public var snippet_title:String;
+		public var snippet_code:String;
+		public var snippet_type:String;
+		public var snippet_created:String;
+		public var snippet_user:String;		
+		
+		/**
+		 * Helper function for building the data. 
+		 * @param source
+		 * 
+		 */		
+		public function SnippetVO( snip:Object = null )
+		{
+			
+		}
+	}
+}

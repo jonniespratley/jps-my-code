@@ -1,0 +1,80 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.webapis.T30boxes
+{
+
+	public interface I30boxesService
+	{
+		function testPing( aApiKey:String ):void
+		function userFindByEmail( aApiKey:String, aEmail:String ):void
+		function userFindById( aApiKey:String, aId:String ):void
+		function userFindByFacebookId( aApiKey:String, aId:String ):void
+		function userAuthorize( aApiKey:String, aApplicationName:String, aApplicationLogo:String, aReturnUrl:String = null ):String
+		function userGetAllInfo( aApiKey:String, aAuthorizedToken:String ):void
+		function userSetStatus( aApiKey:String, aAuthorizedToken:String, aStatus:String ):void
+		
+		function eventsGet( aApiKey:String, aAuthorizedToken:String, aStart:Date = null, aEnd:Date = null ):void
+		function eventsGetDisplayList( aApiKey:String, aAuthorizedToken:String, aStart:Date = null, aEnd:Date = null ):void
+		function eventsGetById( aApiKey:String, aAuthorizedToken:String, aSince:Date = null ):void
+		function eventsGetRecentUpdates( aApiKey:String, aAuthorizedToken:String, aSince:Date = null ):void
+		function eventsGetRecentDeletions( aApiKey:String, aAuthorizedToken:String, aSince:Date = null ):void
+		function eventsSearch( aApiKey:String, aAuthorizedToken:String, aQuery:String ):void
+		function eventsSearchByExternalUID( aApiKey:String, aAuthorizedToken:String, aExternalUID:String ):void
+		function eventsGetTags( aApiKey:String, aAuthorizedToken:String ):void
+		function eventsDelete( aApiKey:String, aAuthorizedToken:String, aEventId:String ):void
+		function eventsAddByOneBox( aApiKey:String, aAuthorizedToken:String, aEvent:String ):void
+		
+		function eventsAddByElements( 
+										aApiKey:String, 
+										aAuthorizedToken:String, 
+										aSummary:String, 
+										aNotes:String = null, 
+										aStartDate:Date = null,
+										aStartTime:Date =  null, 
+										aEndDate:Date = null,
+										aEndTime:Date = null, 
+										aTags:String = null, 
+										aInvites:String = null, 
+										aPrivacy:String = null, 
+										aExternalUID:String = null, 
+										aRepeat:String = null, 
+										aRepeatEnd:String = null,
+										aSkipDates:Date = null, 
+										aRepeatICal:String = null, 
+										aReminder:String = null 
+									):void
+		
+		function eventsUpdate( 
+								aApiKey:String, 
+								aAuthorizedToken:String, 
+								aSummary:String, 
+								aNotes:String = null, 
+								aStartDate:Date = null,
+								aStartTime:Date =  null, 
+								aEndDate:Date = null,
+								aEndTime:Date = null, 
+								aTags:String = null, 
+								aInvites:String = null, 
+								aPrivacy:String = null, 
+								aExternalUID:String = null, 
+								aRepeat:String = null, 
+								aRepeatEnd:String = null,
+								aSkipDates:Date = null, 
+								aRepeatICal:String = null, 
+								aReminder:String = null 
+							):void
+		
+		function todosGet(  aApiKey:String, aAuthorizedToken:String ):void
+		function todosAdd(  aApiKey:String, aAuthorizedToken:String, aTags:String = null, aDone:String = null, aExternalUID:String = null ):void
+		function todosUpdate(  aApiKey:String, aAuthorizedToken:String, aTodoId:int, aText:String = null, aTags:String = null, aDone:String = null, aExternalUID:String = null ):void
+		function todosDelete(  aApiKey:String, aAuthorizedToken:String, aTodoId:int ):void
+		
+		
+		
+	}
+}

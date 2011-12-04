@@ -1,0 +1,212 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.webapis.T30boxes
+{
+	import com.adobe.net.URI;
+	import com.jonniespratley.webapis.T30boxes.events.*;
+	import com.jonniespratley.webapis.T30boxes.model.T30boxesUser;
+	
+	import mx.rpc.events.FaultEvent;
+	import mx.rpc.events.ResultEvent;
+	import mx.rpc.http.HTTPService;
+	
+	/**
+	 * 30boxes.com API Service Class. This class is a starting point for
+	 * the 30boxes.com AS3 Library. It provides most of the calls that
+	 * 30boxes supports with there REST API.
+	 * 
+	 * @langversion ActionScript 3.0
+	 * @playerversion Flash 9
+	 * @author Jonnie 
+	 * 
+	 */	
+	public class T30boxesService implements I30boxesService
+	{
+		private var service:HTTPService;
+		private var baseURL:String = "http://30boxes.com/api/api.php?";
+		
+		//Authorize Application Info
+		public var APP_NAME:String = "";
+		public var APP_LOGO:String = "";
+		public var APP_RETURN_URL:String = "";
+		
+		public function T30boxesService()
+		{
+			service =  new HTTPService();
+			
+		}
+		
+		private function sendQuery( aURI:URI, aResultHandler:Function, aFaultHandler:Function ):void
+		{
+			service.contentType = HTTPService.CONTENT_TYPE_XML;
+			service.resultFormat = HTTPService.RESULT_FORMAT_XML;			
+			
+			service.addEventListener( ResultEvent.RESULT, aResultHandler );
+			service.addEventListener( FaultEvent.FAULT, aFaultHandler );
+			
+			service.url = aURI.toString();
+			service.send( );
+		}
+		
+		
+
+		public function testPing(aApiKey:String):void
+		{
+			var theURL:URI = new URI( baseURL );
+				theURL.setQueryValue( "method", "test.Ping" );
+				theURL.setQueryValue( "apiKey", aApiKey );
+			
+			sendQuery( theURL, onResult_testPing, onFault_testPing );
+			trace( theURL.toString() );
+		}
+		
+		public function userFindByEmail(aApiKey:String, aEmail:String):void
+		{
+		}
+		
+		public function userFindById(aApiKey:String, aId:String):void
+		{
+		}
+		
+		public function userFindByFacebookId(aApiKey:String, aId:String):void
+		{
+		}
+		
+		public function userAuthorize(aApiKey:String, aApplicationName:String, aApplicationLogo:String, aReturnUrl:String=null):String
+		{
+			var theURL:URI = new URI( baseURL );
+				theURL.setQueryValue( "method", "user.Authorize" );
+				theURL.setQueryValue( "apiKey", aApiKey );
+				theURL.setQueryValue( "applicationName", aApplicationName );
+				theURL.setQueryValue( "applicationLogoUrl", aApplicationLogo );
+			if ( aReturnUrl != null )
+			{
+				theURL.setQueryValue( "returnUrl", aReturnUrl );				
+			}
+			
+			return theURL.toString();
+			trace( theURL.toString() );
+		}
+		
+		public function userGetAllInfo(aApiKey:String, aAuthorizedToken:String):void
+		{
+			var theURL:URI = new URI( baseURL );
+				theURL.setQueryValue( "method", "user.GetAllInfo" );
+				theURL.setQueryValue( "apiKey", aApiKey );
+				theURL.setQueryValue( "authorizedUserToken", aAuthorizedToken );
+			sendQuery( theURL, onResult_userInfo, onFault_testPing );
+		}
+		
+		public function userSetStatus(aApiKey:String, aAuthorizedToken:String, aStatus:String):void
+		{
+		}
+		
+		public function eventsGet(aApiKey:String, aAuthorizedToken:String, aStart:Date=null, aEnd:Date=null):void
+		{
+		}
+		
+		public function eventsGetDisplayList(aApiKey:String, aAuthorizedToken:String, aStart:Date=null, aEnd:Date=null):void
+		{
+		}
+		
+		public function eventsGetById(aApiKey:String, aAuthorizedToken:String, aSince:Date=null):void
+		{
+		}
+		
+		public function eventsGetRecentUpdates(aApiKey:String, aAuthorizedToken:String, aSince:Date=null):void
+		{
+		}
+		
+		public function eventsGetRecentDeletions(aApiKey:String, aAuthorizedToken:String, aSince:Date=null):void
+		{
+		}
+		
+		public function eventsSearch(aApiKey:String, aAuthorizedToken:String, aQuery:String):void
+		{
+		}
+		
+		public function eventsSearchByExternalUID(aApiKey:String, aAuthorizedToken:String, aExternalUID:String):void
+		{
+		}
+		
+		public function eventsGetTags(aApiKey:String, aAuthorizedToken:String):void
+		{
+		}
+		
+		public function eventsDelete(aApiKey:String, aAuthorizedToken:String, aEventId:String):void
+		{
+		}
+		
+		public function eventsAddByOneBox(aApiKey:String, aAuthorizedToken:String, aEvent:String):void
+		{
+		}
+		
+		public function eventsAddByElements(aApiKey:String, aAuthorizedToken:String, aSummary:String, aNotes:String=null, aStartDate:Date=null, aStartTime:Date=null, aEndDate:Date=null, aEndTime:Date=null, aTags:String=null, aInvites:String=null, aPrivacy:String=null, aExternalUID:String=null, aRepeat:String=null, aRepeatEnd:String=null, aSkipDates:Date=null, aRepeatICal:String=null, aReminder:String=null):void
+		{
+		}
+		
+		public function eventsUpdate(aApiKey:String, aAuthorizedToken:String, aSummary:String, aNotes:String=null, aStartDate:Date=null, aStartTime:Date=null, aEndDate:Date=null, aEndTime:Date=null, aTags:String=null, aInvites:String=null, aPrivacy:String=null, aExternalUID:String=null, aRepeat:String=null, aRepeatEnd:String=null, aSkipDates:Date=null, aRepeatICal:String=null, aReminder:String=null):void
+		{
+		}
+		
+		public function todosGet(aApiKey:String, aAuthorizedToken:String):void
+		{
+		}
+		
+		public function todosAdd(aApiKey:String, aAuthorizedToken:String, aTags:String=null, aDone:String=null, aExternalUID:String=null):void
+		{
+		}
+		
+		public function todosUpdate(aApiKey:String, aAuthorizedToken:String, aTodoId:int, aText:String=null, aTags:String=null, aDone:String=null, aExternalUID:String=null):void
+		{
+		}
+		
+		public function todosDelete(aApiKey:String, aAuthorizedToken:String, aTodoId:int):void
+		{
+		}
+		
+		private function onResult_userInfo( t_result:ResultEvent ):void
+		{
+										
+			//Create a new xml object
+			var resultNode:XML;			
+			
+			//Create a array to add the xml to
+			var result:Array = new Array();					
+			
+					//Make the result of the request as xml
+					var tagXML:XML = new XML( t_result.result );
+			
+					//Then parse the xml, for each node in xml 
+					for each ( resultNode in tagXML.children() )
+					{			
+						//Create a new Tag from the result			
+							//the tag_count is set to the result.@count attribute							
+								//the tag_name is set to the result.@tag attribute 
+						var user:T30boxesUser = new T30boxesUser( resultNode.child("id"), resultNode.child( "facebookId" ) );						
+							
+						//Add the tag to our array
+						result.push( user );
+						
+						//Add the array to our model for binding
+						trace( result );					
+					}
+		}
+		
+		private function onResult_testPing( t_result:ResultEvent ):void
+		{
+			trace( t_result.result as XML );
+		}
+		
+		private function onFault_testPing( t_fault:FaultEvent ):void
+		{
+			trace( t_fault.fault );
+		}
+		
+	}
+}

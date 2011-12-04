@@ -1,0 +1,59 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.itsdeliciousair.service
+{
+	import com.adobe.net.URI;
+	import com.jonniespratley.itsdeliciousair.vo.BundleVO;
+	import com.jonniespratley.itsdeliciousair.vo.PostVO;
+	import com.jonniespratley.itsdeliciousair.vo.UserVO;
+	
+	public interface IDeliciousService
+	{
+		/** Checks users credentials */	
+		function checkAccount( aUser:UserVO ):void;
+				
+		/** Adds a new post */
+		function addPost( aUser:UserVO, aPost:PostVO ):void;
+		
+		/** Removes a post */
+		function removePost( aUser:UserVO, byURL:URI ):void;
+		
+		/** Searches all posts */
+		function searchPosts(  aUser:UserVO, aTag:String = null, aDate:Date = null, aURL:URI = null, aHash:String = null, aMeta:String = "yes"):void;
+		
+		/** Gets all post dates */	
+		function getPostDates( aUser:UserVO, aTag:String = null ):void;
+		
+		/** Gets Recent Posts */
+		function getRecentPosts( aUser:UserVO, aTag:String = null, aCount:String = null ):void;
+	
+		/** Gets all Posts */
+		function getAllPosts( aUser:UserVO, aTag:String = null, aStart:String = null, aResults:String = null, aFromDT:Date = null, aToDT:Date = null, aMeta:String = "yes" ):void;	
+		
+		/** Gets all post hashes */
+		function getAllPostHashes( aUser:UserVO ):void;
+		
+		/** Gets all tags */
+		function getTags( aUser:UserVO ):void;
+		
+		/** Renames a tag */
+		function renameTag( aUser:UserVO, aOldName:String, aNewName:String ):void;
+		
+		/** Removes a tag */
+		function removeTag( aUser:UserVO, aWhatTag:String ):void;
+
+		/** Gets all bundles */	
+		function getBundles( aUser:UserVO, aBundle:String = null ):void;
+		
+		/** Creates a bundle */
+		function setBundle( aUser:UserVO, aBundle:BundleVO ):void;
+		
+		/** Removes a bundle */
+		function removeBundle( aUser:UserVO, aBundle:String ):void;			
+	}
+}

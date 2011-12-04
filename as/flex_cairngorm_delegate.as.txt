@@ -1,0 +1,41 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package
+{
+	import com.adobe.cairngorm.business.ServiceLocator;
+	
+	import flash.utils.ByteArray;
+	
+	import mx.rpc.AsyncToken;
+	import mx.rpc.IResponder;
+
+	/**
+	 * The Business Delegate delegates all the responsibility for the
+	 * business logic that must locate a service, and then invokes
+	 * a method on the service.
+	 *
+	 */
+	public class Delegate
+	{
+		private var responder:IResponder;
+		private var service:Object;
+
+		public function SnipprDelegate( responder:IResponder )
+		{
+			this.service = ServiceLocator.getInstance().getRemoteObject( "MyService" );
+			this.responder = responder;
+		}
+
+		/************** ServiceCalls ********************/
+		public function getData():void
+		{
+			var token:AsyncToken = service.getData();
+				token.addResponder( responder );
+		}		
+	}
+}

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="280" height="240">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.jonniespratley.advguidetoflex.webapis.DeliciousService;
+			import com.jonniespratley.advguidetoflex.model.ModelLocator;
+			
+			[Bindable] private var model:ModelLocator = ModelLocator.getInstance();
+			private var service:DeliciousService = new DeliciousService();
+			
+			private function getTags():void
+			{
+				service.getTags( model.deliciousUser );	
+			}
+			
+			private function getPosts():void
+			{
+				service.getRecentPosts( model.deliciousUser );
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Form width="100%" height="100%">
+		
+		<mx:FormItem label="Username:" fontWeight="bold" width="100%">
+			<mx:Label 
+				text="{ model.deliciousUser.user_name }" 
+				fontWeight="normal"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="Messages:" fontWeight="bold" width="100%">
+			<mx:Label 
+				text="{ model.deliciousUser.user_inbox }" 
+				fontWeight="normal"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="Last Updated:" fontWeight="bold" width="100%">
+			<mx:Label 
+				text="{ model.deliciousUser.user_update }" 
+				fontWeight="normal"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="RSS:" fontWeight="bold" width="100%">
+			<mx:Label 
+				text="{ model.deliciousUser.user_feed }" 
+				fontWeight="normal"/>
+		</mx:FormItem>
+		
+		<mx:FormItem direction="horizontal">
+			<mx:LinkButton
+				label="Get Tags" 
+				click="getTags()"/>
+			<mx:LinkButton 
+				label="Get Posts" 
+				click="getPosts()"/>
+		</mx:FormItem>
+		
+	</mx:Form>	
+</mx:VBox>

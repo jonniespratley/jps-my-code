@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="init()" width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import com.jonniespratley.webapis.T30boxes.T30boxesService;
+			
+			private var apikey:String = "";
+			private var service:T30boxesService;
+			
+			private function init():void
+			{
+				service = new T30boxesService();
+				service.testPing( apikey );
+			}
+			
+			//Authorize the user
+			private function authorizeUser():void
+			{
+				navigateToURL( new URLRequest( service.userAuthorize( apikey, "30Boxes of Air", "http://jonniespratley.com/images/air_boxes_logo.png", null ) ) );
+				Alert.show( "Please click 'OK' once you have authorized this application on 30boxes.com.", "30Boxes Authorization" );
+			}
+			
+			private function getInfo():void
+			{
+				service.userGetAllInfo( apikey, txt_token.text );
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:ApplicationControlBar width="100%">
+		<mx:Label text="Your Token:" fontWeight="bold"/>
+		<mx:TextInput id="txt_token" width="100%"/>
+		<mx:Button label="Get My Info"
+			click="getInfo()"/>
+		<mx:Button label="Authorize"
+			click="authorizeUser()"/>
+	</mx:ApplicationControlBar>
+	
+	
+</mx:VBox>

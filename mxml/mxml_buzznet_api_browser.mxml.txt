@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" 
+	styleName="paddingBox">
+	
+	<xmlrpc:XMLRPCObject id="buzznetSrv" 
+		destination="xmlrpc/?key=APIKEY" 
+		endpoint="http://bnedit.buzznet.com/interface/" 
+		fault="onFault( event )"
+		result="onResult( event )"/>
+		
+	<xmlrpc:XMLRPCObject id="bloggerSrv" 
+		destination="blogger" 
+		endpoint="http://bnedit.buzznet.com/interface/" 
+		fault="onFault( event )"
+		result="onResult( event )"/>
+
+	<mx:Script>
+		<![CDATA[
+		
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			import mx.utils.Base64Encoder;
+		
+
+			import mx.utils.ArrayUtil;		
+			import mx.rpc.events.ResultEvent;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;			
+			
+			[Bindable] private var dataArr:Array;
+			[Bindable] private var apikey:String = "APIKEY";
+
+			private function onResult( event:ResultEvent ):void
+			{
+				hideLoading();
+				dataArr = ArrayUtil.toArray( event.result );;
+			}			
+			
+			private function onFault( event:FaultEvent ):void
+			{
+				hideLoading();
+				Alert.show( event.fault.faultString );
+			}		
+	
+			private function authMe():void
+			{
+			
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( "buzznet.getOnlineNow" );
+			}
+			
+			
+			/////////////////////////////////////////////
+			// API Test Calls/ All Gets
+			/////////////////////////////////////////////
+	
+			
+			private static const GET_BOOKMARKS:String 					= "buzznet.getBookmarks";	
+			private static const GET_MOST_POPULAR:String 				= "buzznet.getMostPopular";
+			private static const GET_TODAYS_BIRTHDAYS:String 			= "buzznet.getTodaysBirthdays";
+			private static const GET_ONLINE_NOW:String 					= "buzznet.getOnlineNow";
+			private static const GET_FEATURED_USERS:String 				= "buzznet.getFeaturedUsers";			
+			private static const GET_GALLERY:String 					= "buzznet.getGallery";
+			private static const GET_SUB_GALLERIES:String 				= "buzznet.getSubGalleries";	
+			private static const GET_MY_FRIENDS:String 					= "buzznet.getMyFriends";
+			private static const GET_FRIENDS:String 					= "buzznet.getFriends";
+			private static const GET_FRIENDS_RECENT:String				= "buzznet.getFriendsRecent";
+			private static const GET_BUZZWORD:String 					= "buzznet.getBuzzword";
+			private static const BROWSE_BUZZWORDS:String 				= "buzznet.browseBuzzwords";
+			private static const GET_COMMENTS:String 					= "buzznet.getComments";
+			private static const GET_RECENT_COMMENTS:String 			= "buzznet.getRecentComments";
+			private static const GET_RECENT_POSTS:String				= "buzznet.getRecentPosts";				
+
+			private function sendCall( method:String, args:String = undefined ):void
+			{
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				
+				
+				if ( !args ) 
+				{
+					buzznetSrv.call( method, encode );					
+				} else {
+					buzznetSrv.call( method, encode, args );
+				}				
+				
+				buzznetSrv.addEventListener(ResultEvent.RESULT, onResult );
+				buzznetSrv.addEventListener(FaultEvent.FAULT, onFault ); 
+			}
+			private function getComments():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_COMMENTS, "2864741", "user" );	
+			}
+			private function getRecentComments():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_RECENT_COMMENTS, txt_username.text );	
+			}
+			private function getBookmarks():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_BOOKMARKS );	
+			}
+			private function getMyFriends():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_MY_FRIENDS );	
+			}
+			private function getFriends():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_FRIENDS, 5136771 );	
+			}
+			private function getMostPopular():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_MOST_POPULAR, "cat" );	
+			}
+			private function getTodaysBirthdays():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_TODAYS_BIRTHDAYS );	
+			}
+			private function getOnlineNow():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_ONLINE_NOW );	
+			}
+			private function getRecentPosts():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_RECENT_POSTS, "user" );	
+			}
+			private function getFeaturedUsers():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_FEATURED_USERS, 10 );	
+			}
+			private function getBuzzwords():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_BUZZWORD, "flex", 20, 0 );	
+			}
+			private function browseBuzzwords():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( BROWSE_BUZZWORDS, 50 );	
+			}
+			private function getGallery():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_GALLERY, "ha", "user", "user", 1, 10 );	
+			}
+			private function getSubGalleries():void
+			{
+				showLoading();
+				
+				var encode:Base64Encoder = new Base64Encoder();
+					encode.encode( txt_username.text + ":" + txt_password.text );
+				
+				buzznetSrv.method = "POST";
+				buzznetSrv.contentType = "application/xml";
+				buzznetSrv.useProxy = false;
+				buzznetSrv.headers = { Authorization: "Basic " + encode, Accept: "application/xml" };
+				buzznetSrv.call( GET_SUB_GALLERIES, txt_username.text );	
+			}
+			
+			//Blogger Service Call
+			private function getUserInfo():void
+			{
+				showLoading();
+				
+				bloggerSrv.call( "blogger.getUserInfo", apikey, txt_username.text, txt_password.text );
+			}
+			
+			
+			//Show the Loading Panel
+			private var loadingPanel:IFlexDisplayObject;
+			
+			private function showLoading():void 
+			{
+				loadingPanel = PopUpManager.createPopUp( this, Loading, true );
+			}
+			private function hideLoading():void
+			{
+				PopUpManager.removePopUp( loadingPanel );
+			}
+			
+
+		]]>
+	</mx:Script>
+	<mx:Image source="com/jonniespratley/BuzznetAir/assets/buzznet_logo.png"/>	
+	<mx:HDividedBox width="100%" height="100%">
+		<mx:VBox width="225" height="100%" styleName="paddingBox">
+			
+			<mx:Label text="Username:" fontWeight="bold"/>
+			<mx:TextInput id="txt_username" width="100%"/>
+			
+			<mx:Label text="Password:" fontWeight="bold"/>
+			<mx:TextInput id="txt_password" 
+			displayAsPassword="true" 
+			width="100%"/>
+			
+			<mx:Button label="Authenticate" click="authMe()"/>
+			<mx:Label 
+			text="Method:" 
+			fontWeight="bold"/>			
+			<mx:TextInput 
+			id="txt_method" 
+			width="100%"/>
+			<mx:HBox width="100%">
+				<mx:Label text="Arguments:" fontWeight="bold" width="100%"/>
+				<mx:Button 
+				width="20" 
+				height="20" 
+				styleName="icon" 
+				icon="@Embed(source='../../assets/textfield_add.png')"/>
+			</mx:HBox>
+			<mx:TextInput id="txt_arg" width="100%"/>	
+			<mx:Button label="Get My Info" click="getUserInfo()"/>									
+		</mx:VBox>
+		<mx:VBox width="100%" height="100%">
+		
+			<mx:TabNavigator id="tb_browser" width="100%" height="100%">
+				<mx:VBox label="Datagrid" width="100%" height="100%">
+					<mx:DataGrid id="dg_data" width="100%" height="100%" dataProvider="{ dataArr }"/>
+				</mx:VBox>
+				<ns1:GalleryScreen label="Gallery" width="100%" height="100%" photos="{ dataArr }">
+				</ns1:GalleryScreen>
+			</mx:TabNavigator>
+			
+			<mx:HBox width="100%">
+				<mx:Button label="Get Comments" click="getComments()"/>
+				<mx:Button label="Get Recent Comments" click="getRecentComments()"/>
+				<mx:Button label="Get Bookmarks" click="getBookmarks()"/>
+				<mx:Button label="Get My Friends" click="getMyFriends()"/>
+				<mx:Button label="Get Friends" click="getFriends()"/>
+				<mx:Button label="Get Most Popular" click="getMostPopular()"/>
+				<mx:Button label="Get Birthdays" click="getTodaysBirthdays()"/>
+			</mx:HBox>
+			
+			<mx:HBox width="100%">
+				<mx:Button label="Get Online Users" click="getOnlineNow()"/>
+				<mx:Button label="Get Recent Posts" click="getRecentPosts()"/>
+				<mx:Button label="Get Featured Users" click="getFeaturedUsers()"/>
+				<mx:Button label="Get Buzzwords" click="getBuzzwords()"/>
+				<mx:Button label="Browse Buzzwords" click="browseBuzzwords()"/>
+				<mx:Button label="Get Gallery" click="getGallery()"/>
+				<mx:Button label="Get Sub Galleries" click="getSubGalleries()"/>
+			</mx:HBox>
+		</mx:VBox>
+	</mx:HDividedBox>	
+	<ns2:FriendsImgList friendsImages="{ dataArr }">
+	</ns2:FriendsImgList>
+</mx:VBox>

@@ -1,0 +1,68 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package
+{
+	import com.adobe.cairngorm.commands.ICommand;
+	import com.adobe.cairngorm.control.CairngormEvent;
+
+	import mx.collections.ArrayCollection;
+	import mx.controls.Alert;
+	import mx.rpc.IResponder;
+	import mx.rpc.events.FaultEvent;
+	import mx.rpc.events.ResultEvent;
+	import mx.utils.ArrayUtil;
+
+	/**
+	 * For every feature or use case in your application, a corresponding custom command
+	 * and event must be created. Each command contains an execute() method that is run
+	 * by the framework when the user action has been executed.
+	 * These classes are occasionally referred to as worker classes because they carry
+	 * out the work for an application.
+	 *
+	 */
+	public class GetCommand implements ICommand, IResponder
+	{
+		private var model:ModelLocator = ModelLocator.getInstance();
+
+		public function execute( event:CairngormEvent ) : void
+		{
+			var evt:SnippetGetEvent = event as SnippetGetEvent;		
+			var delegate:Delegate = new Delegate( this );
+				delegate.getData();
+		}
+
+		public function result( data:Object ) : void
+		{
+			var result:ResultEvent = data as ResultEvent;
+	
+			model.collection = new ArrayCollection( ArrayUtil.toArray( data.result ) );
+
+		}
+
+		public function fault( fault:Object ):void
+		{
+			var faultEvt:FaultEvent = fault as FaultEvent;			
+			
+			Alert.show(faultEvt.fault.toString(), "Service Error");
+			
+			trace(faultEvt.fault.faultString);
+		}
+		
+		private function initVO( resultArray:Array ):ArrayCollection
+		{
+			var tempArray:ArrayCollection = new ArrayCollection();
+			
+			for ( var s:String in resultArray )
+			{
+				tempArray.addItem( new VO( resultArray[s] ) );				
+			}
+			return tempArray;
+		}
+		
+	}
+}

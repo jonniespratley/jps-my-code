@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" xmlns:delicious="com.jonniespratley.advguidetoflex.view.chapter4.delicious.*">
+	<mx:Script>
+		<![CDATA[
+			import com.jonniespratley.advguidetoflex.model.ModelLocator;
+			
+			[Bindable] private var model:ModelLocator = ModelLocator.getInstance();
+			
+		]]>
+	</mx:Script>
+	
+	<delicious:PostForm id="postForm"
+		deliciousUser="{ model.deliciousUser }"/>
+	<delicious:PostList id="postList"
+		postDataProvider="{ model.postCollection }"/>	
+</mx:HBox>

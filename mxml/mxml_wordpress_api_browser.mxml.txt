@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" creationComplete="init();">
+	<mx:Script>
+		<![CDATA[
+			import com.jonniespratley.http.rpc.xmlrpc.XMLRPCObject;			
+			import mx.utils.Base64Encoder;
+			import mx.utils.ArrayUtil;
+			import mx.collections.ArrayCollection;		
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.AsyncToken;
+			import mx.controls.Alert;			
+
+			//Our data that is going to be returned
+			[Bindable] private var returnedData:ArrayCollection;
+			
+			//Our website endpoint where WordPress is installed at
+			[Bindable] private var wordpressEndpoint:String = "http://flexpress.jonniespratley.com";
+			
+			//Our service variable that is a xmlrpc object
+			private var service:XMLRPCObject;
+			
+			private function init():void
+			{
+				//Create a new service 
+				service = new XMLRPCObject();
+				
+				//Specify the endpoint
+				service.endpoint = wordpressEndpoint;
+				
+				//We know what destination we need to access
+				service.destination = "/xmlrpc.php";
+				
+				//Set a fault handler
+				service.addEventListener( FaultEvent.FAULT, onFault );
+				
+				//And set a result handler
+				service.addEventListener( ResultEvent.RESULT, onResult );
+			}
+        	
+			/*******************************************
+			 * wp.getUsersBlogs
+			 * @args user_name, user_pass
+			********************************************/
+			private function getUsersBlogs():void
+			{
+				service.call("wp.getUsersBlogs", txt_username.text, txt_password.text)
+			}			
+			
+			/*******************************************
+			 * blogger.getUserInfo
+			 * @args fake app id, user_name, user_pass
+			********************************************/
+			private function getUserInfo():void
+			{			
+				service.call( "blogger.getUserInfo", "43243423", txt_username.text, txt_password.text );
+			}			
+			
+			/*******************************************
+			 * blogger.getRecentPosts
+			 * @args blog_ID, user_login, user_pass, num_posts
+			********************************************/
+			private function getRecentPosts():void
+			{	
+				service.call( "blogger.getRecentPosts", "43243423", txt_blogid.value, txt_username.text, txt_password.text,  txt_count.value );			
+				
+			}			
+			
+			/*******************************************
+			 *  onResult/ Populates the dp:Array
+			********************************************/
+			private function onResult( event:ResultEvent ):void
+			{
+				returnedData = new ArrayCollection(ArrayUtil.toArray( event.result ) );		
+			}
+						
+			/*******************************************
+			 * onFault/ Displays the FaultString
+			********************************************/
+			private function onFault ( event:FaultEvent ):void
+			{
+				Alert.show(event.fault.faultString,event.fault.faultCode);
+			}			
+			
+		]]>
+	</mx:Script>
+		
+   	<!--View-->
+	<mx:HDividedBox width="100%" height="100%">	
+			<mx:Accordion width="225" height="100%">
+				<mx:VBox label="User Infomation" width="100%" height="100%" styleName="sideBox">
+					
+					<!--Wordpress Username-->
+					<mx:Label 
+						text="Username:" 
+						fontWeight="bold"/>					
+						<mx:TextInput id="txt_username" 
+							text=""/>
+					<!--Wordpress Password-->
+					<mx:Label 
+						text="Password:" 
+						fontWeight="bold"/>					
+						<mx:TextInput id="txt_password" 
+							displayAsPassword="true" 
+							text=""/>
+					<!--Wordpress Website-->	
+					<mx:Label
+						text="Your Website:"
+						fontWeight="bold"/>
+						<mx:TextInput id="txt_website"
+							text="{ wordpressEndpoint }"/>							
+								
+				</mx:VBox>
+				<mx:VBox label="Methods without Parameters" width="100%" height="100%" styleName="sideBox">
+					
+					<!--GetUsersBlogs-->
+					<mx:Button 
+						click="getUsersBlogs()" 
+						label="Get Users Blogs" 
+						width="100%"/>
+					
+					<!--GetUserInfo-->
+					<mx:Button
+						click="getUserInfo()" 
+						label="Get User Info" 
+						width="100%"/>
+				
+				</mx:VBox>
+				<mx:VBox label="Methods with Parameters" width="100%" height="100%" styleName="sideBox">
+					
+					<!--What Blog-->
+					<mx:Label
+						text="What Blog"
+						fontWeight="bold"/>
+						<mx:NumericStepper id="txt_blogid"
+							maximum="5"
+							minimum="1"/>
+						
+					<!--How Many-->	
+					<mx:Label
+						text="How Many"
+						fontWeight="bold"/>
+						<mx:NumericStepper id="txt_count"
+							maximum="25"
+							minimum="5"/>
+					
+					<!--GetRecentPosts-->
+					<mx:Button 
+						click="getRecentPosts()" 
+						label="Get Recent Posts" 
+						width="100%"/>					
+				
+				</mx:VBox>
+			</mx:Accordion>							
+						
+		<!--Sandbox Results-->
+		<mx:DataGrid id="dg_returneddata"
+			height="100%" 
+			width="100%" 
+			dataProvider="{ returnedData }"/>
+	</mx:HDividedBox>
+</mx:VBox>

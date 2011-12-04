@@ -1,0 +1,49 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+import mx.utils.Base64Encoder;
+import mx.controls.Image;
+import mx.graphics.ImageSnapshot;
+import mx.graphics.codec.PNGEncoder;
+import mx.collections.ArrayCollection;
+import mx.utils.UIDUtil;
+
+
+//Filename variable
+private var fileName:String = "";
+
+/*
+The takeScreenShot function that will create a new bitmap data variable,
+and take the width and height of our stage (window) and create a image from it.
+Then we will add this to the clipboard for easy pasting as well as encoding it
+into a bytearray for easy transfering to amfphp.
+*/
+private function takeScreenshot():void
+{
+	//Set the filename param on amfphp to the textinput text, add a .png cause its a png!
+	fileName = txt_filename.text +".png";
+	
+	//New Bitmap data variable set the the height and with of the stage        
+	var bitmapData:BitmapData = new BitmapData( stage.width, stage.height );
+	
+			//Draw the stage	        			
+			bitmapData.draw( stage );
+			
+	//Create clipboard variable				
+	var clipboard:Clipboard = Clipboard.generalClipboard;	
+				
+			//Clear whatever was on there prior
+			clipboard.clear();
+									
+			//Set the clipboard data to the bitmapData variable, notice how we didnt encode it!
+			clipboard.setData( ClipboardFormats.BITMAP_FORMAT, bitmapData );
+			
+	//Create a byte array variable, then PNGEncoder to encode what, the bitmapData
+	var bytes:ByteArray = new PNGEncoder().encode( bitmapData );	
+	
+	service.takeScreenshot( bytes, fileName );
+}

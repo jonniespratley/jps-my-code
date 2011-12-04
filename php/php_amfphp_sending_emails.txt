@@ -1,0 +1,54 @@
+<?php
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+ *
+ * Created on Jul 28, 2008
+ *
+ * Copywrite 2008 | All Rights Reserved
+ * 		emailFrom = "sam@gmail.com"
+ * 		emailMessage = "I loved your website."
+ * 		emailSubject = "Hey"
+ * 		emailTo = "jonniespratley@gmail.com"
+ */
+
+//eMail Class
+require_once "eMail.php";
+
+	
+/**
+* -> We take one argument here that is emailVO,
+* Flex is sending over a value object that has all
+* of the details needed to successfully send an email
+* to the specified address in the vo.
+* 
+* @param emailVO The email object from Flex.
+*/
+public function sendEmail( $emailVO )
+{	
+	//Create a new email Object
+	$email = new eMail( "Flex Mail Form", $emailVO[email_from] );
+	{
+		//Create Subject Line
+		$email->subject( $emailVO[email_subject] );
+
+		//To ( email address )
+		$email->to( $emailVO[email_to] );
+
+		//From ( email address )
+		$email->bcc( $emailVO[email_from]);
+
+		//HTML Message
+		$email->html( $emailVO[email_message] );
+
+		//Send e-mail
+		$email->send();
+	}
+	return "Message Sent";
+}
+
+?>

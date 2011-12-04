@@ -1,0 +1,245 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.snippr.services
+{
+	import com.jonniespratley.snippr.model.ModelLocator;
+	import com.jonniespratley.snippr.vo.EmailVO;
+	import com.jonniespratley.snippr.vo.SnippetVO;
+	
+	import flash.net.NetConnection;
+	import flash.net.Responder;
+	import flash.utils.ByteArray;
+	
+	import mx.collections.ArrayCollection;
+	import mx.controls.Alert;
+	import mx.rpc.events.ResultEvent;
+	
+	/**
+	 * This file is for use without! using the services-config.xml file 
+	 * @author Jonnie Spratley
+	 * @website http://jonniespratley.com
+	 * 
+	 */	
+	public class SnipprService
+	{
+		/** NetConnection variable for creating our amfphp connection */		
+		private static var _service:NetConnection;
+		
+		/** Location of our gateway for amfphp */
+		private var gateway:String = "http://localhost/snippr/amfphp/gateway.php";
+				
+		/** Our model so we can update it when we receive our data */		
+		private var model:ModelLocator = ModelLocator.getInstance();
+		
+		/**
+		 * Here we are creating a new connection to our amfphp service, when this is instantiated, 
+		 * it connects to our service.
+		 * 
+		 */		
+		public function SnipprService()
+		{
+			_service = new NetConnection();
+			_service.connect( gateway );
+		}		
+		
+		/* **********************************************************************
+		*			All Service Calls to AMFPHP (updated)
+		*
+		* 	This is where all of our service calls are taken, when our
+		*	outside componets calls these functions all required arguemtns
+		*	must be passed to properly send/update/delete data.
+		*	
+		*	If arguments are not present Flex wont compile. In all of our
+		*	calls we attach assigned result handlers for the specific calls
+		*	that we are making. They all use the same fault handler.
+		************************************************************************/
+	
+		
+		/**
+		 * Here we are calling the getSnippets on our server (amfphp) and setting the result and fault handlers 
+		 * 
+		 */		
+		public function getSnippets():void
+		{
+			_service.call( "snippr.SnipprService.getSnippets", new Responder( snippetResultHandler, snipprFaultHandler ) );
+			trace( "Gettings Snippets" );
+		}
+		
+		/**
+		 * We take one argument here, and that is a snippet, because our server (amfphp) is expecting a snippetVO 
+		 * 
+		 * @param snippet snippetVO object
+		 * 
+		 */		
+		public function saveSnippet( snippet:SnippetVO ):void
+		{
+			_service.call( "snippr.SnipprService.saveSnippet", new Responder( snippetSavedHandler, snipprFaultHandler ), snippet );
+			trace( "Saving Snippet" );
+		}
+		
+		/**
+		 * We take one argument here, and that is the id of the snippet we are wanting to remove 
+		 * 
+		 * @param snippet_id the id to be removed
+		 * 
+		 */		
+		public function removeSnippet( snippet_id:uint ):void
+		{
+			_service.call( "snippr.SnipprService.removeSnippet", new Responder( snippetRemoveHandler, snipprFaultHandler ), snippet_id );
+			trace( "Removing Snippet" );
+		}
+		
+		public function searchSnippets( args:Array ):void
+		{
+			_service.call( "snippr.SnipprService.searchSnippets", new Responder( snippetResultHandler, snippetSearchHandler ), args );
+		}
+		
+		/**
+		 * We take two arguments here, one is a byte array and the other is the filename of the file
+		 *  
+		 * @param bytes byte array
+		 * @param filename filename of the file
+		 * 
+		 */		
+		public function takeScreenshot( bytes:ByteArray, filename:String ):void
+		{
+			_service.call( "snippr.MediaService.takeScreenshot", new Responder( snapshotResultHandler, snipprFaultHandler ), bytes, filename );
+			trace( "Sending Screenshot" );
+		}
+		
+		
+		/**
+		 * We take one argument here, and that is a email value object. 
+		 * We are passing this object to amfphp where our email will be sent
+		 * 
+		 * @param email
+		 * 
+		 */		
+		public function sendEmail( email:EmailVO ):void
+		{
+			_service.call( "snippr.MediaService.sendEmail", new Responder( emailResultHandler, snippetSavedHandler ), email );
+			trace( "Sending Email" ); 
+		}		
+		
+				
+		/* ***********************************************************
+		*			Result and Fault Handlers
+		*
+		* 	This is where all of our result and fault handling is 
+		*	going to take place, we updating the model on the results
+		* 	that we get back. Or simply displaying to the user what
+		* 	comes back to Flex.
+		**************************************************************/
+		
+		/**
+		 * We are handling the result coming back as an array of snippets, 
+		 * then we add our snippets to our model
+		 * 
+		 * @param data the array of snippets
+		 * 
+		 */				
+		private function snippetResultHandler( data:Array ):void
+		{			
+			model.snippetCollection =  new ArrayCollection( data );
+		}
+		
+		private function snippetSearchHandler( data:Array ):void
+		{
+			trace( data );
+		}
+		
+		/**
+		 * We are taking the data object as the result, 
+		 * tracing it and we could display an alert to 
+		 * the user showing him/her whatever message 
+		 * we want.
+		 * 
+		 * @param data a message showing us the status
+		 * 
+		 */		
+		private function emailResultHandler( data:Object ):void
+		{
+			var result:ResultEvent = data as ResultEvent;
+			trace( data );
+		}
+		
+		/**
+		 * We are taking the data object as the result, and 
+		 * creating a new window, then adding a image inside 
+		 * the window. Then populating that image's source
+		 * with the url that is sent back, which happens to 
+		 * be the url location where the photo is. So we just
+		 * add the result which is a string to the source of the image
+		 * and displying it.
+		 * 
+		 * @param data image url 
+		 * 
+		 */		
+		private function snapshotResultHandler( data:Object ):void
+		{
+			var result:ResultEvent = data as ResultEvent;						
+	
+			Alert.show( "Nice shot, here is the link to your shot." + data, "Screenshot Saved" );		
+				
+			trace( data );
+		}
+		
+		/**
+		 * We have this helper to help parse our 
+		 * result that is coming back, looping through
+		 * all of the objects then creating an array collection
+		 * from it.
+		 * 
+		 * @param resultArray array of objects
+		 * @return ArrayCollection of snippets 
+		 * 
+		 */		
+		private function initVO( resultArray:Array ):ArrayCollection
+		{
+			var tempArray:ArrayCollection = new ArrayCollection();
+			
+			for ( var s:String in resultArray )
+			{
+				tempArray.addItem( new SnippetVO( resultArray[s] ) );
+				
+			}
+			return tempArray;
+		}		
+		
+		/**
+		 * Here we are handling the result and adding it to the value of serviceResponse in our model
+		 * 
+		 * @param data the result from amfphp 
+		 */		
+		private function snippetSavedHandler( data:Object ):void
+		{
+			ModelLocator.getInstance().serviceResponse = data.toString();
+		}
+		
+		/**
+		 * Here we are handling the result that is being returned, which will be the id of the removed snippet, 
+		 * removing it from our model, at the snippet index
+		 * 
+		 * @param data we are just refreshing/calling for the snippets again.
+		 */
+		private function snippetRemoveHandler( data:Object ):void
+		{
+			getSnippets();
+		}
+		
+		/**
+		 * Here we are alerting the user that there was an error connection to our server
+		 * 
+		 * @param fault the fault object from the call
+		 */
+		private function snipprFaultHandler( fault:Object ):void
+		{
+			Alert.show( "There was an error connecting to the server.", "Snippr Service Error" );
+		}		
+	}		
+}

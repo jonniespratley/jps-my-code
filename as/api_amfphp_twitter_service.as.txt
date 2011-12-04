@@ -1,0 +1,239 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.advguidetoflex.webapis
+{
+	import com.jonniespratley.advguidetoflex.model.ModelLocator;
+	
+	import flash.net.NetConnection;
+	import flash.net.Responder;
+	
+	import mx.collections.ArrayCollection;
+	import mx.managers.CursorManager;
+	import mx.utils.ArrayUtil;
+	
+	/**
+	 * Basic AMFPHP service class for connecting to Twitter's API
+	 * through the help of AMFPHP.
+	 *  
+	 * @author Jonnie
+	 * 
+	 */	
+	public class TwitterAMFPHPService
+	{
+		/** NetConnection variable for creating our amfphp connection */		
+		private static var _service:NetConnection;
+				
+		/** Our Model for all the data binding and setting */
+		private var model:ModelLocator = ModelLocator.getInstance();
+				
+		public function TwitterAMFPHPService( gateway:String )
+		{
+			_service = new NetConnection();
+			_service.connect( gateway );
+		}
+		
+		/**
+		 * Checks to see if the user authenticating
+		 * is really a Twitter user
+		 * 
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 */		
+		public function checkCredentials( yourUsername:String, yourPassword:String ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.verifyCredentials", new Responder( onResult_login, onFault ), yourUsername, yourPassword );
+		}
+		
+		/**
+		 * Logs the current user out.
+		 * 
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 */		
+		public function endSession( yourUsername:String, yourPassword:String ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.endSession", new Responder( onResult, onFault ), yourUsername, yourPassword );
+		}
+		
+		
+		/**
+		 * Gets the authenticating users timeline
+		 * 
+		 * @param yourUsername twitter username
+		 * @param yourPassword twitter password
+		 * @param yourID twitter id
+		 * @param yourCount how many
+		 * @param yourSince since what date
+		 */		
+		public function getUserTimeline( yourUsername:String, yourPassword:String, yourID:String = "", 
+															yourCount:Number = 25, yourSince:Date = null ):void
+		{
+			//Set the cursor
+			CursorManager.setBusyCursor();
+			//Call the service Twitter.userTimeline
+			_service.call( "Twitter.userTimeline", new Responder( onResult, onFault ),
+																	yourUsername, yourPassword, yourID, yourCount, yourSince );
+			
+		}
+		
+		
+		
+		
+		/**
+		 * Gets all of the users followers
+		 * 
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 */		
+		public function getFollowers( yourUsername:String, yourPassword:String ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.followers", new Responder( onResult, onFault ), 
+																yourUsername, yourPassword );
+		}
+		
+		/**
+		 * Gets all of the users friends
+		 * 
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 */		
+		public function getFriends( yourUsername:String, yourPassword:String ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.friends", new Responder( onResult, onFault ), 
+															  yourUsername, yourPassword );
+		}		
+		
+		
+		/**
+		 * Gets all of the featured users
+		 * 
+		 */		
+		public function getFeatured():void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.featured", new Responder( onResult, onFault ) );
+		}
+		
+		/**
+		 * Starts following a friend
+		 * 
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 */		
+		public function followFriend( friendsID:int, friendsUsername:String, yourUsername:String, yourPassword:String ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.followFriend", new Responder( onResult, onFault ), 
+																	friendsID, friendsUsername, yourUsername, yourPassword );
+		}
+		
+		/**
+		 * Gets your friends timeline
+		 * 
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 */		
+		public function getFriendsTimeline( yourUsername:String, yourPassword:String, 
+																friendsID:String = null, since:Date = null ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.friendsTimeline", new Responder( onResult, onFault ), 
+																		yourUsername, yourPassword, friendsID, since );
+		}
+		
+		
+		/**
+		 * Updates the users status on Twitter
+		 *  
+		 * @param yourMessage the message to send
+		 * @param yourUsername twitter yourUsername
+		 * @param yourPassword twitter yourPassword
+		 * @param yourSource the source of message (i.e cell, computer, etc. )
+		 */		
+		public function updateStatus( yourMessage:String, yourUsername:String, yourPassword:String, yourSource:String = "" ):void
+		{
+			CursorManager.setBusyCursor();
+			_service.call( "Twitter.update", new Responder( onResult_update, onFault ), 
+																yourMessage, yourUsername, yourPassword, yourSource );
+		}
+		
+		
+		/**
+		 * We just take the result, and then display it in the model
+		 * @param data
+		 */		
+		private function onResult_update( data:Object ):void
+		{
+			//Remove busy cursor
+			CursorManager.removeBusyCursor();
+			
+			//Set the callResult to the result of the call
+			model.callResult = data.toString();
+			
+			//Trace It
+			trace( data );
+		}		
+		
+		
+		
+		/**
+		 * Sets the logged in to true 
+		 * and traces the result
+		 *  
+		 * @param data
+		 */		
+		private function onResult_login( data:Object ):void
+		{
+			//Remove busy cursor
+			CursorManager.removeBusyCursor();
+			
+			//Set user as logged in
+			model.isLoggedIn = true;
+			
+			//Set the callResult to the result of the call
+			model.callResult = data.toString();
+			
+			//Trace It
+			trace( data );
+		}
+		
+		
+		/**
+		 * Handles all of the results, for now
+		 * @param data
+		 */		
+		private function onResult( data:Object ):void
+		{
+			//Remove busy cursor
+			CursorManager.removeBusyCursor();
+			
+			//Create a new ac from the data that came from twitter via amfphp
+			model.twitterCollection = new ArrayCollection( ArrayUtil.toArray( data ) );
+			
+			//Trace It
+			trace( data.result );
+		}
+		
+		/**
+		 * Handles the faults Temp.
+		 * @param fault
+		 */		
+		private function onFault( fault:Object ):void
+		{
+			//Remove busy cursor
+			CursorManager.removeBusyCursor();
+			
+			//Trace It
+			trace( fault );
+		}
+	}
+}

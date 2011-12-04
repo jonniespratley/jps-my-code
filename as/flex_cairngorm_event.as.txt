@@ -1,0 +1,47 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package
+{
+	/**
+	 * Cairngorm provides a singleton Cairngorm Event Dispatcher that works with the Front Controller class. 
+	 * Whenever you want to dispatch Cairngorm events, you use the Cairngorm Event Dispatcher. 
+	 *
+	 * The following code shows how to broadcast a Cairngorm event using 
+	 * the Cairngorm Event Dispatcher: 
+	 *
+	 * <code>
+	 *	var evt:YourEvent = new YourEvent( YourEvent.NAME_OF_EVENT );
+	 *		evt.dispatchEvent();
+	 *</code>
+	 *
+	 * The dispatchEvent() method of the Cairngorm Event Dispatcher singleton takes a parameter of 
+	 * type flash.events.Event. This event is dispatched and the corresponding command is executed.
+	 *
+	 * This is how the Front Controller, Cairngorm Event Dispatcher, Command patterns, and 
+	 * Cairngorm Events work together with the Cairngorm Event, the Model Locator, and VO 
+	 * patterns to create an immersive experience for the user of an RIA.
+	 *
+	 */
+	import com.adobe.cairngorm.control.CairngormEvent;
+	import flash.events.Event;
+		
+	public final class GetEvent extends CairngormEvent
+	{
+		public static const GET_EVENT:String = "GET_EVENT";
+
+		public function GetEvent()
+		{
+			super( GET_EVENT );
+		}
+		
+		override public function clone():Event
+		{
+			return new GetEvent();
+		}
+	}
+}

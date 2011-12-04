@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.jonniespratley.advguidetoflex.webapis.DeliciousService;
+			import com.jonniespratley.advguidetoflex.model.ModelLocator;
+			import com.adobe.net.URI;
+			import com.jonniespratley.advguidetoflex.model.DeliciousPost;
+			import com.jonniespratley.advguidetoflex.model.DeliciousUser;
+			
+			
+			[Bindable] public var deliciousUser:DeliciousUser;
+			
+			private var service:DeliciousService = new DeliciousService();
+			
+			private function addPost():void
+			{
+				var url:URI = new URI( txt_url.text );
+				var	post:DeliciousPost = new DeliciousPost();
+					post.url = txt_url.text; 
+					post.title = txt_title.text; 
+					post.tags = null;
+					post.description =  txt_desc.text; 
+					post.timestamp = txt_time.selectedDate;	
+			
+					service.addPost( deliciousUser, post )
+			}
+			
+			private function clearForm():void
+			{
+				txt_url.text = ""; 
+				txt_title.text = ""; 
+				txt_desc.text = "";
+				txt_tags.text = "";
+				txt_time.selectedDate = null;				
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Form width="100%" height="100%">
+		<mx:FormItem label="URL:" required="true">
+			<mx:TextInput id="txt_url"/>
+		</mx:FormItem>
+		<mx:FormItem label="Title:" required="true">
+			<mx:TextInput id="txt_title"/>
+		</mx:FormItem>
+		<mx:FormItem label="Description:" required="true">
+			<mx:TextInput id="txt_desc"/>
+		</mx:FormItem>
+		<mx:FormItem label="Tags:" required="true">
+			<mx:TextInput id="txt_tags"/>
+		</mx:FormItem>
+		<mx:FormItem label="Time" required="true">
+			<mx:DateField id="txt_time"/>
+		</mx:FormItem>
+		<mx:FormItem label="Replace:" required="true">
+			<mx:CheckBox label="Yes" id="txt_replace"/>
+		</mx:FormItem>
+		<mx:FormItem label="Shared:" required="true">
+			<mx:CheckBox label="Yes" selected="true" id="txt_shared"/>
+		</mx:FormItem>
+		<mx:Button label="Save" click="addPost()"/>
+	</mx:Form>
+</mx:VBox>

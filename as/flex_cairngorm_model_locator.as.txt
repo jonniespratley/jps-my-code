@@ -1,0 +1,61 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package 
+{
+	import com.adobe.cairngorm.model.IModelLocator;
+	
+	import mx.collections.ArrayCollection;
+
+	/**
+	 * The Model Locator pattern is a singleton and was created purely 
+	 * to be used with Flex/Air application development. In this case, 
+	 * a singleton is a design pattern that allows for only one 
+ 	 * instance of the Model Locator to be present within your a
+	 * application's memory. Any data that you think is required to live 
+	 * in the application's state should be stored inside the Model Locator. 
+	 * The Model Locator creates a central area where all the states 
+	 * can be held in your Flex/Air application. This allows the view 
+	 * components to bind to the model or state of the application 
+	 * and keep everything up to date.
+	 *
+	 */
+	
+    [Bindable]
+	public final class ModelLocator implements IModelLocator
+	{
+		/**
+		 * Defines the Singleton instance of the Application ModelLocator
+		 */
+		private static var instance:ModelLocator;
+
+		public function ModelLocator()
+		{
+			if( instance != null ) throw new Error( "Error: Singletons can only be instantiated via getInstance() method!" );
+
+			ModelLocator.instance = this;
+		}
+
+		/**
+		 * Returns the Singleton instance of the Application ModelLocator
+		 */
+		public static function getInstance():ModelLocator
+		{
+			if( instance == null )	instance = new ModelLocator();
+
+			return instance;
+		}
+
+		// *********** Public Variables that our views are going to bind to ************** \\
+		
+
+		// ***************** Public Static Variables for Work View States ************* \\
+		public var workflowState:uint = 0;
+		public static const LOGIN_SCREEN:uint = 0;
+		public static const WELCOME_SCREEN:uint = 1;
+	}
+}

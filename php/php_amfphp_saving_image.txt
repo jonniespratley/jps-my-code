@@ -1,0 +1,50 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+
+
+//Specify our output temp directory
+var $output_dir = "screenshots";
+	
+//Specify our output url 
+var $server_url = "FULLPATH TO FILE";
+
+
+/** *******************************************************************************
+* Save image from the given bytearray and return the path of the saved image
+***********************************************************************************/
+	public function takeScreenshot( $byteArray, $filename, $compressed = false )
+	{
+		/** -> Check if our folder exists, and also if it is writeable */
+	    if( !file_exists( $this->output_dir ) || !is_writeable( $this->output_dir ) )
+	        
+	        //If it is not there, throw a error
+			trigger_error ( "Please create a temp directory with write access", E_USER_ERROR );
+		
+		//Set a data variable, and then set it to the value of byteArray (from Flex) the data inside the bytearray
+	    $data = $byteArray->data;
+	
+		//If it is compressed
+	    if( $compressed )
+	    {
+	    	//Check if php server even has gzip installed
+	        if( function_exists( gzuncompress ) )
+	        {
+	        	//if so then uncompress it
+	            $data = gzuncompress( $data );	          	             
+	        } else {
+	        	//or throw a error
+	            trigger_error ( "Gzuncompress method does not exists, please send uncompressed data", E_USER_ERROR );
+	        }
+	    }
+		//Put the File in the Directory, and Rename it, what the User wanted the Name to be.
+	    file_put_contents( $this->output_dir . "/$filename", $data );
+	   
+	   //Return the url to the user, so we can pop up a window with the new image!
+	   return $this->server_url . $this->output_dir . "/$filename";
+	}
+	

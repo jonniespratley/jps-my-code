@@ -1,0 +1,189 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.itsdeliciousair.managers
+{
+	import flash.desktop.NativeApplication;
+	import flash.desktop.Updater;
+	import flash.events.Event;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
+	import flash.net.URLRequest;
+	import flash.net.URLStream;
+	import flash.utils.ByteArray;
+	
+	import mx.controls.Alert;
+	import mx.events.CloseEvent;
+	import mx.rpc.events.FaultEvent;
+	import mx.rpc.events.ResultEvent;
+	import mx.rpc.http.HTTPService;
+	
+	public class UpdateManager
+	{
+		//Update url
+		private var versionURL:String;
+		//load the app descript
+		private var appXMLDescripter:XML = NativeApplication.nativeApplication.applicationDescriptor;
+		
+		private var ns:Namespace = appXMLDescripter.namespace();
+		//Set the version
+		private var currentVersion:String = appXMLDescripter.ns::version;
+		
+		//Hold for remote version.xml xml data
+		private var version:XML;
+		private var urlStream:URLStream = new URLStream();
+		private var fileData:ByteArray = new ByteArray();
+		
+		public function UpdateManager( versionURL:String, checkAuto:Boolean = true )
+		{
+			this.versionURL = versionURL;
+			if ( checkAuto ) loadRemoteFile();
+		}
+		
+		//Load the remove version.xml file
+		private function loadRemoteFile():void
+		{
+			//Create a new http service
+			var http:HTTPService = new HTTPService();
+				//Set the url to the versionURL
+				http.url = this.versionURL;
+				//Set up the method			
+				http.method = "GET";
+				//We are getting xml 
+				http.resultFormat = "xml";
+				//Send it off
+				http.send();
+				
+				//Add some result handlers to handle any faults or results
+				http.addEventListener( ResultEvent.RESULT, onVersionResult );
+				http.addEventListener( FaultEvent.FAULT, onVersionFault );
+		}
+		
+		/**
+		 * Check for update if the for
+		 * @return 
+		 * 
+		 */		
+		public function checkForUpdate():Boolean
+		{
+			if ( version == null )
+			{
+				this.loadRemoteFile();
+				return true;
+			}
+			if ( (currentVersion != version.@version ) && version.@forceUpdate == true )
+			{
+				getUpdate();
+			}else if ( currentVersion != version.@version )
+			{
+				Alert.show( "There is an update available, would you like to get it now? \nDetails: " +	version.@message, "Application Update",	3, null, updateAlertHandler );
+			} else {
+				Alert.show( "There is no new updates available", "Notice" );
+			}
+			return true;
+		}
+		
+		/**
+		 * 
+		 * @param event
+		 * 
+		 */		
+		private function onVersionResult( event:ResultEvent ):void
+		{
+			version = XML( event.result );
+			
+			if (( currentVersion != version.@version ) && version.@forceUpdate == true )
+			{
+				getUpdate();
+			} else if ( currentVersion != version.@version ) 
+			{
+				Alert.show( "There is an update available, \nwould you like to " + 
+						"get it now? \n\nDetails:\n" + version.@message, "Application Update", 3, null, updateAlertHandler );
+			}
+			trace( version.@version );
+		}
+		
+		/**
+		 * 
+		 * @param event
+		 * 
+		 */		
+		private function onVersionFault( event:FaultEvent ):void
+		{
+			Alert.show( "Failed to check for update from" + this.versionURL + "\nPlease try again later", "Update Error" );
+		}
+		
+		/**
+		 * When the box closes if the use hit YES then get the update
+		 * @param event
+		 * 
+		 */		
+		private function updateAlertHandler( event:CloseEvent ):void
+		{
+			if ( event.detail  == Alert.YES )
+			{
+				getUpdate();
+			}
+		}
+		
+		/**
+		 * Create a new url request and set the url for the download location
+		 * 
+		 */		
+		private function getUpdate():void
+		{
+			var theRequest:URLRequest = new URLRequest( version.@downloadLocation );
+			
+			urlStream.addEventListener( Event.COMPLETE, onGetUpdateComplete );
+			urlStream.load( theRequest );
+		}
+		
+		/**
+		 * 
+		 * @param event
+		 * 
+		 */		
+		private function onGetUpdateComplete( event:Event ):void
+		{
+			urlStream.readBytes( fileData, 0, urlStream.bytesAvailable );
+			
+			writeAirFile();
+		}
+		
+		/**
+		 * Put the downloaded air app inside the storage
+		 * write the bytes and close the stream
+		 * 
+		 */		
+		private function writeAirFile():void
+		{
+			var file:File = File.applicationStorageDirectory.resolvePath( "ItsDeliciousAir.air" );
+			
+			var fileStream:FileStream = new FileStream();
+				fileStream.addEventListener( Event.CLOSE, updateFileClosedHandler );
+				fileStream.openAsync( file, FileMode.WRITE );
+				fileStream.writeBytes( fileData, 0, fileData.length );
+				fileStream.close();
+		}
+		
+		/**
+		 * When the app is done downloading and closed.
+		 * start the install.
+		 * @param event
+		 * 
+		 */		
+		private function updateFileClosedHandler( event:Event ):void
+		{
+			var updater:Updater = new Updater();
+			var airFile:File = File.applicationStorageDirectory.resolvePath( "ItsDeliciousAir.air " );
+			
+			updater.update( airFile, version.@version );
+			
+		}
+	}
+}

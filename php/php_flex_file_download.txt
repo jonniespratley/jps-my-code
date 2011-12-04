@@ -1,0 +1,70 @@
+<?php
+/** ****************************************************************
+ * Working File Download XML Server Script for Flex
+ *
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+/* Set the content type for the browser */
+header("Content-type: text/xml");
+
+/* Establish a connection to database */
+$link = mysql_connect('localhost', 'spratley_guest', 'guest') or die('Could not connect: ' . mysql_error());
+
+/* Select the database */
+mysql_select_db( 'spratley_tutorials', $link ) or die ( mysql_error() );
+
+/* Build the query for the table */
+$query = "SELECT * FROM flex_uploads ORDER BY file_date DESC";
+
+/* Execute the query on the table */
+$resultID = mysql_query( $query, $link ) or die( "Data not found." );
+
+/* Set the header xml version */
+$xml_output = "<?xml version=\"1.0\"?>\n";
+
+/* Set the root node for the xml */
+$xml_output .= "<files>\n";
+
+/* Loop through all records in the query and output */
+for( $x = 0 ; $x < mysql_num_rows( $resultID ) ; $x++ )
+{
+	/* Result rows */
+    $row = mysql_fetch_assoc( $resultID );
+    
+	/* Set the child node */
+    $xml_output .= "\t<file>\n";
+    
+	/* Set every node inside the child file node (id) */
+    $xml_output .= "\t\t<id>" . $row['file_id'] . "</id>\n";
+    
+    /* file_name table column */
+    $xml_output .= "\t\t<name>" . $row['file_name'] . "</name>\n";
+    
+    /* file_size table column */
+	$xml_output .= "\t\t<size>" . $row['file_size'] . "</size>\n";
+	
+	/* file_type table column */
+	$xml_output .= "\t\t<type>" . $row['file_type'] . "</type>\n";
+	
+	/* file_url table column */
+	$xml_output .= "\t\t<url>" . $row['file_url'] . "</url>\n";
+	
+	/* file_date table column */
+	$xml_output .= "\t\t<date>" . $row['file_date'] . "</date>\n";
+    
+    /* Close the child file now and print the child file node out */
+    $xml_output .= "\t</file>\n";
+    
+}/* Ends the loop */
+
+/* Close the parent files node */
+$xml_output .= "</files>";
+
+/* Output all of the xml */
+echo $xml_output; 
+
+?>

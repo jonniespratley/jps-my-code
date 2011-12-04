@@ -1,0 +1,47 @@
+<?php
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+class Database
+{
+	//Enter your credentials
+	var $db_host = "localhost";
+	var $db_name = "textpattern";
+	var $db_user = "spratley_guest";
+	var $db_pass = "guest";
+	
+	//If you have installed textpattern with prefix change it in this field
+	var $db_prefix = "txp_";
+	
+
+	//These are for my reference
+	var $txpdb;
+	var $conn;
+
+	public function Database()
+	{
+		$this->conn = mysql_connect( $this->db_host, $this->db_user, $this->db_pass );
+		
+		mysql_select_db( $this->db_name, $this->conn );
+		
+		$this->txpdb->article_tbl = 'textpattern';
+		$this->txpdb->category_tbl = $this->db_prefix .'category';
+		$this->txpdb->style_tbl = $this->db_prefix .'css';
+		$this->txpdb->comment_tbl = $this->db_prefix .'discuss';
+		$this->txpdb->file_tbl = $this->db_prefix .'file';
+		$this->txpdb->form_tbl = $this->db_prefix .'form';
+		$this->txpdb->image_tbl = $this->db_prefix .'image';
+		$this->txpdb->link_tbl = $this->db_prefix .'link';
+		$this->txpdb->log_tbl = $this->db_prefix .'log';
+		$this->txpdb->page_tbl = $this->db_prefix .'page';
+		$this->txpdb->plugin_tbl = $this->db_prefix .'plugin';
+		$this->txpdb->pref_tbl = $this->db_prefix .'prefs';
+		$this->txpdb->section_tbl = $this->db_prefix .'section';
+		$this->txpdb->user_tbl = $this->db_prefix .'users';	
+	}
+}
+?>

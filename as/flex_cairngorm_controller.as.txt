@@ -1,0 +1,32 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package
+{
+	import com.adobe.cairngorm.control.FrontController;
+	
+	/**
+	 * The Front Controller is a central place where all the commands are mapped to
+	 * the relevant events. Once an event is dispatched, the Front Controller finds
+	 * the corresponding command to execute.
+	 */	
+	public final class Controller extends FrontController
+	{
+		public function Controller()
+		{
+			this.initialize();
+		}
+
+		private function initialize() : void
+		{
+			//Map events.WHAT TYPE OF EVENT, to COMMAND
+
+		    
+		    //todo: add commands
+		}
+	}
+}

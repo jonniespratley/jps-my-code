@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" verticalAlign="middle">
+	<mx:Script>
+		<![CDATA[
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;	
+			import com.jonniespratley.advguidetoflex.webapis.DeliciousService;
+			
+			private var service:DeliciousService = new DeliciousService();
+			
+			private function doLogin():void
+			{
+				service.checkAccount( txt_username.text, txt_password.text );				
+			}
+		
+		]]>
+	</mx:Script>
+	<mx:HBox verticalAlign="middle">
+		<mx:Image source="assets/logos/delicious_32x32.png"/>
+		<mx:Label text="Del.icio.us" fontWeight="bold" fontSize="16"/>
+	</mx:HBox>
+	
+	<!--UserLogin-->
+	<mx:Form width="100%">
+	
+		<!--Del.icio.us Username-->
+		<mx:FormItem label="Username:" width="100%" required="true" labelStyleName="formLabel">
+			<mx:TextInput id="txt_username"
+				width="100%"/>
+		</mx:FormItem>
+		
+		<!--Del.icio.us Password-->
+		<mx:FormItem label="Password:" width="100%" required="true" labelStyleName="formLabel">
+			<mx:TextInput id="txt_password"
+				displayAsPassword="true" 
+				width="100%"/>
+		</mx:FormItem>
+		
+		<!--Del.icio.us Login-->
+		<mx:FormItem width="100%" horizontalAlign="right" direction="horizontal">			
+			<mx:Button id="btn_login"
+				label="Login" 
+				click="doLogin()"/>						
+		</mx:FormItem>			
+	</mx:Form>
+</mx:VBox>

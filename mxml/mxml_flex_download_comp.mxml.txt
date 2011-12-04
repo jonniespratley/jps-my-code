@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+-->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" creationComplete="init()" 
+	xmlns:components="com.jonniespratley.advguidetoflex.view.chapter5.components.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.rpc.http.HTTPService;
+			import mx.rpc.events.FaultEvent;
+			import mx.events.FlexEvent;	
+			import mx.rpc.events.ResultEvent;
+			import flash.events.*;
+			import flash.net.*;		
+			import mx.controls.Alert;
+			import mx.events.*;
+			import mx.managers.*;			
+			
+			/* Our File reference */
+			private var fileRef:FileReference;
+			
+			/* Our image service that is goin to connect to get the xml */
+			private var svcImages:HTTPService;
+			
+			/* Our XML url */
+			private var filexmlURL:String = "php/flex_file_download.php";
+			
+			/* Create a new httpservice and file reference, then register some even listeners, then get the images */				
+			private function init():void
+			{
+				//For security purposes but it seems only to work when using air
+				Security.allowDomain( "*" );
+				Security.loadPolicyFile( "crossdomain.xml" );
+					
+				svcImages = new HTTPService();
+				fileRef = new FileReference();				
+				svcImages.addEventListener( FaultEvent.FAULT, faultHandler );
+				svcImages.addEventListener( ResultEvent.RESULT, resultHandler );
+				getImages();
+			}			
+			
+			/* Makes the call to the xml script */
+			private function getImages():void 
+			{
+				svcImages.url = filexmlURL;
+				svcImages.method = URLRequestMethod.GET;	
+				svcImages.send(); 				
+			}	
+						
+			/* Handles any results that happen */
+			private function resultHandler( event:ResultEvent ):void 
+			{
+				lt_images.dataProvider = event.target.lastResult.files.file;
+			}				
+			
+			/* Downloads the selected file to users computer */
+			private function downloadFile( whatFile:String ):void
+			{			
+				var request:URLRequest = new URLRequest();
+					request.method = URLRequestMethod.GET;					
+					request.url = "http://advguidetoflex.jonniespratley.com/php/uploads/" + whatFile;					
+			
+					fileRef.download( request );			
+			}
+	
+			/* Handles any faults that happen */			
+			private function faultHandler( event:FaultEvent ):void 
+			{
+				Alert.show( "There was a error fetching the images.", "Error" );
+			}
+		]]>
+	</mx:Script>
+	
+	<!--Download Button-->
+	<mx:Button label="Download"
+		click="downloadFile( lt_images.selectedItem.name )"
+		width="100%"/>
+		
+	<!--Displays our Images-->
+	<mx:TileList id="lt_images" width="100%" height="100%">
+		<mx:itemRenderer>
+			<mx:Component>
+				<components:ImageRenderer/>
+			</mx:Component>
+		</mx:itemRenderer>		
+	</mx:TileList>	
+	
+	<!--Refresh Button-->
+	<mx:Button label="Refresh"
+		click="getImages()"
+		width="100%"/>
+</mx:VBox>

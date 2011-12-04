@@ -1,0 +1,609 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+package com.jonniespratley.itsdeliciousair.service
+{
+	import com.adobe.net.URI;
+	import com.adobe.utils.DateUtil;
+	import com.arc90.rpc.events.FaultEvent;
+	import com.arc90.rpc.events.ResultEvent;
+	import com.arc90.rpc.rest.RESTService;
+	import com.arc90.rpc.rest.RESTServiceMethod;
+	import com.jonniespratley.itsdeliciousair.managers.DatabaseManager;
+	import com.jonniespratley.itsdeliciousair.model.ModelLocator;
+	import com.jonniespratley.itsdeliciousair.vo.BundleVO;
+	import com.jonniespratley.itsdeliciousair.vo.PostVO;
+	import com.jonniespratley.itsdeliciousair.vo.TagVO;
+	import com.jonniespratley.itsdeliciousair.vo.UserVO;
+	
+	import flash.xml.XMLDocument;
+	import flash.xml.XMLNode;
+	
+	import mx.collections.ArrayCollection;
+	import mx.controls.Alert;
+	import mx.managers.CursorManager;
+
+	public class DeliciousAPIService implements IDeliciousService
+	{
+		
+		//Del.icio.us Base API URL
+		private var endpoint:String = "https://api.del.icio.us/v1/";
+		
+		//Del.icio.us RSS URL
+		private var feedURL:String = "http://feeds.delicious.com/v2/rss/";
+		
+		//Del.icio.us Home URL
+		private var baseURL:String = "http://del.icio.us/";
+		
+		//Our Database Connection
+		private var database:DatabaseManager = new DatabaseManager();
+		
+		//Our REST Service variable
+		private var service:RESTService;
+		
+		//Our model for updating the data
+		[Bindable] private var model:ModelLocator = ModelLocator.getInstance();
+		
+		public function DeliciousAPIService()
+		{
+			service = new RESTService();
+			service.addEventListener( FaultEvent.FAULT, onFault );	
+		}
+		
+		//Helper for sending calls
+		/**
+		 * Sends calls to Del.icio.us's api,  
+		 * @param user the current user
+		 * @param uri the method on the api
+		 * @param resultHandler the result handler
+		 * 
+		 */		
+		private function sendQuery( user:UserVO, uri:URI, resultHandler:Function ):void
+		{
+			CursorManager.setBusyCursor();
+			model.readyForCall = false
+						
+			
+			//Set the credentials
+			service.setCredentials( user.username, user.password );
+		
+			service.contentType = RESTService.CONTENT_TYPE_XML;
+		
+			service.requestTimeout = 1000;
+		
+			//Set the call url
+			service.url = uri.toString();
+			
+			//Send the call
+			service.send();
+			
+			//Add a result listener
+			service.addEventListener( ResultEvent.RESULT, resultHandler );
+		
+			//trace the url
+			trace( "Service URL: " + service.url );
+		}
+		
+
+		public function checkAccount( aUser:UserVO ):void
+		{
+			CursorManager.setBusyCursor();
+			
+			//Set the credentials
+			service.setCredentials( aUser.username, aUser.password );
+			
+			//Set the URL
+			service.url = endpoint + "posts/update";
+			
+			//Set the Method
+			service.method = RESTServiceMethod.GET;
+			
+			//Send It
+			service.send();
+			
+			//Add event Listener
+			service.addEventListener( ResultEvent.RESULT, onResult_checkAccount );
+			
+			//Set the User in the Model to the username and passowrd
+			model.currentUser = new UserVO(  aUser.username, aUser.password ); 			
+		}
+		
+		public function addPost(aUser:UserVO, aPost:PostVO):void
+		{
+			var queryURL:URI = new URI( endpoint + "posts/add" );
+				queryURL.setQueryValue( "url", aPost.url.toString() );
+				
+			var today:Date = new Date();
+				
+			//Check if there is any data in the fields
+			if ( aPost.title != "" )
+			{
+				queryURL.setQueryValue( "description", aPost.title );							
+			}
+			
+			if ( aPost.description != "" )
+			{
+				queryURL.setQueryValue( "extended", aPost.description );		
+			}
+			
+			if ( aPost.tags != null )
+			{
+				queryURL.setQueryValue( "tags", aPost.tags.toArray().join( " " ) );
+			}			
+			
+			//queryURL.setQueryValue( "dt", DateUtil.toW3CDTF( today ) );
+			
+			if ( aPost.shared == "yes" )
+			{
+			//	queryURL.setQueryValue( "shared", aPost.shared ? "yes" : "no" );		
+			}
+				//queryURL.setQueryValue( "replace", aPost.replace ? "yes" : "no" );
+			
+			//Send out
+			sendQuery( aUser, queryURL, onResult_addPost );								
+		}
+		
+		public function removePost(aUser:UserVO, byURL:URI):void
+		{
+			var queryURL:URI = new URI( endpoint + "posts/delete" );
+				queryURL.setQueryValue( "url", byURL.toString() );
+				
+			sendQuery( aUser, queryURL, onResult_removePost );
+		}
+		
+		public function searchPosts(aUser:UserVO, aTag:String=null, aDate:Date=null, aURL:URI=null, aHash:String=null, aMeta:String="yes"):void
+		{
+		}
+		
+		public function getPostDates(aUser:UserVO, aTag:String=null):void
+		{
+		}
+		
+		public function getRecentPosts(aUser:UserVO, aTag:String=null, aCount:String = "35"):void
+		{
+			var queryURL:URI = new URI( endpoint + "posts/recent" );
+				
+			if ( aCount != null )
+			{
+				queryURL.setQueryValue( "count", aCount );				
+			}
+			if ( aTag != null )
+			{
+				queryURL.setQueryValue( "tag", aTag );				
+			}
+			
+			//Send out
+			sendQuery( aUser, queryURL, onResult_getPosts );
+		}
+		
+		public function getAllPosts(aUser:UserVO, aTag:String=null, aStart:String=null, aResults:String=null, aFromDT:Date=null, aToDT:Date=null, aMeta:String="yes"):void
+		{
+			var queryURL:URI = new URI( endpoint + "posts/all" );
+			
+			if ( aTag != null )
+			{
+				queryURL.setQueryValue( "tag", aTag );				
+			}
+			if ( aStart != null )
+			{
+				queryURL.setQueryValue( "start", aStart );				
+			}
+			if ( aResults != null )
+			{
+				queryURL.setQueryValue( "results", aResults );				
+			}
+			if ( aFromDT != null )
+			{
+				queryURL.setQueryValue( "fromdt", DateUtil.toW3CDTF( aFromDT ) );				
+			}
+			if ( aToDT != null )
+			{
+				queryURL.setQueryValue( "todt", DateUtil.toW3CDTF( aToDT ) );				
+			}
+			if ( aMeta != null )
+			{
+				queryURL.setQueryValue( "meta", aMeta );				
+			}
+			
+			//Send out
+			sendQuery( aUser, queryURL, onResult_getPosts );
+		}
+		
+		public function getAllPostHashes(aUser:UserVO):void
+		{
+		}
+		
+		public function getTags(aUser:UserVO):void
+		{
+			var queryURL:URI = new URI( endpoint + "tags/get" );
+			
+			sendQuery( aUser, queryURL, onResult_getTags );
+		}
+		
+		public function renameTag(aUser:UserVO, aOldName:String, aNewName:String):void
+		{
+			var queryURL:URI = new URI( endpoint + "tags/rename" );
+				queryURL.setQueryValue( "old", aOldName );
+				queryURL.setQueryValue( "new", aNewName );
+			
+			//Send out
+			sendQuery( aUser, queryURL, onResult_renameTag );	
+		}
+		
+		public function removeTag(aUser:UserVO, aWhatTag:String):void
+		{
+			var queryURL:URI = new URI( endpoint + "tags/delete" );
+				queryURL.setQueryValue( "tag", aWhatTag );
+			
+			//Send out
+			sendQuery( aUser, queryURL, onResult_removeTag );
+		}
+		
+		public function getBundles(aUser:UserVO, aBundle:String=null):void
+		{
+			var queryURL:URI = new URI( endpoint + "tags/bundles/all" );
+			
+			sendQuery( aUser, queryURL, onResult_getBundles );
+		}
+		
+		public function setBundle(aUser:UserVO, aBundle:BundleVO):void
+		{
+			var queryURL:URI = new URI( endpoint + "tags/bundles/set" );
+			
+				queryURL.setQueryValue( "bundle", aBundle.name );
+				queryURL.setQueryValue( "tags", aBundle.tags.toArray().join( " " ) );
+			
+			sendQuery( aUser, queryURL, onResult_setBundle );  
+		}
+		
+		public function removeBundle(aUser:UserVO, aBundle:String):void
+		{
+			var queryURL:URI = new URI( endpoint + "tags/bundles/" );
+				queryURL.setQueryValue( "delete", aBundle );
+			
+			sendQuery( aUser, queryURL, onResult_removeBundle );	
+		}
+				
+		
+		/* 
+		#############################################################################
+		#																			#
+		#				Result Handles for all calls								#
+		#																			#
+		#############################################################################
+		*/
+		
+		/**
+		 * Changes the workflowState to welcome screen.
+		 *  
+		 * @param d_result
+		 * 
+		 */		
+		private function onResult_checkAccount( d_result:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			
+			//Check if we got a ok response
+			if (  d_result.statusCode == 200 )
+			{
+				//Add the data to the user in the model
+				model.currentUser.lastupdated = DateUtil.parseW3CDTF( d_result.result.@time );
+				model.currentUser.inboxcount = d_result.result.@inboxnew;
+				
+				//Set the isLoggedIn to true
+				model.isLoggedIn = true;
+				
+				//Change the workflow state
+				model.workflowState = ModelLocator.DASHBOARD_SCREEN;
+				
+				//And save the user's info to the database for offline usage			 	
+			 	database.saveUser( model.currentUser );
+				
+			
+			} else {
+				//Alert the user
+				Alert.show( "There was a Problem" );
+			}
+			trace( "\nStatus Code: " + d_result.statusCode + "\nStatus Message: " + d_result.statusMessage );
+		}
+		
+		/**
+		 * Here is the xml result:
+		 * 
+		 * <?xml version="1.0" encoding="UTF-8"?>
+		 * <tags>
+		 * 		<tag count="1" tag="30boxes"/>
+		 * 		<tag count="1" tag="JavaScript"/>
+		 * 		<tag count="4" tag="Software"/>
+		 * 		<tag count="3" tag="Web_2.0"/>
+		 * </tags> 
+		 * 
+		 * Takes the result as xml, parses it and then 
+		 * adds the data accordingly to the tag object
+		 * then adds the data to the model.
+		 *  
+		 * @param d_result
+		 * 
+		 */		
+		private function onResult_getTags( d_result:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			//Remove the busy cursor manually
+			CursorManager.removeBusyCursor();
+									
+			//Create a new xml object
+			var resultNode:XML;			
+			
+			//Create a array to add the xml to
+			var result:Array = new Array();					
+			
+				//Check if the result status code, if we get a 200 then parse the xml, else show error
+				if ( d_result.statusCode == 200 ) 
+				{									
+					//Make the result of the request as xml
+					var tagXML:XML = new XML( d_result.result );
+			
+					//Then parse the xml, for each node in xml 
+					for each ( resultNode in tagXML.children() )
+					{			
+						//Create a new Tag from the result			
+							//the tag_count is set to the result.@count attribute							
+								//the tag_name is set to the result.@tag attribute 
+						var tag:TagVO = new TagVO( resultNode.@tag, 
+												   resultNode.@count );						
+							
+						//Add the tag to our array
+						result.push( tag );
+						
+						//Add the array to our model for binding
+						model.tagCollection = new ArrayCollection( result );					
+					}
+				}
+				
+			//Trace the bs
+			trace( "Result Headers: " + d_result.headers +
+				   "\nResult Status Message: " + d_result.statusMessage +
+				   "\nResult Status Code: " + d_result.statusCode +
+				   "\nResult XML: " + d_result.result );
+		}
+		
+		/**
+		 * 
+		 * @param event
+		 * 
+		 */		
+		private function onResult_removeTag( d_event:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			
+			trace( d_event.statusCode );
+		}		
+		
+		
+		/**
+		 * 
+		 * @param event
+		 * 
+		 */		
+		private function onResult_renameTag( d_event:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			
+			trace( d_event.statusCode );
+		}		
+		
+		
+		/**
+		 * Save Post Result Handler
+		 * @param event
+		 * 
+		 */		
+		private function onResult_addPost( d_event:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			
+			trace( d_event.statusCode );
+		}
+		
+		/**
+		 * 
+		 * @param event
+		 * 
+		 */		
+		private function onResult_removePost( d_event:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			
+			trace( d_event.statusCode );
+		}			
+		
+		/**
+		 * Here is the xml result:
+		 * 
+		 * <posts user="jonniedollas" update="2008-09-13T06:03:26Z" tag="" total="264">
+		 * 		<post 
+	 	 * 			href="http://airapps.pbwiki.com/" 
+	 	 * 			hash="736123a4e2b3250e6919fa7538a810d1" 
+	 	 * 			description="airapps wiki" 
+	 	 * 			tag="flex ria web2.0" 
+	 	 * 			time="2008-09-13T05:59:12Z" 
+	 	 * 			extended=""
+	 	 * 			shared="no"/>
+	 	 * </posts>
+		 * 
+		 * 
+		 * Takes the result as xml, parses it and then 
+		 * adds the data accordingly to the DeliciousPost,
+		 * then adds the data to the model.
+		 * 
+		 * 
+		 * @param d_result
+		 * 
+		 */		
+		private function onResult_getPosts( d_result:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			//Remove the busy cursor manually	
+			CursorManager.removeBusyCursor();
+			
+			//Create a new xml object
+			var resultNode:XML;			
+			
+			//Create a array to add the xml to
+			var result:Array = new Array();
+			
+				//Check if the result status code, if we get a 200 then parse the xml, else show error
+				if ( d_result.statusCode == 200 ) 
+				{				
+					//Make the result of the request as xml
+					var postXML:XML = new XML( d_result.result );
+					
+			
+					
+					//Then parse the xml, for each node in xml 
+					for each ( resultNode in postXML.children() )
+					{						
+						var post:PostVO = new PostVO( new URI( resultNode.@href ),
+													  resultNode.@description, 
+													  resultNode.@extended, 
+													  new ArrayCollection( String( resultNode.@tag ).split( " " ) ) ,
+													  resultNode.@shared,					
+													  DateUtil.parseW3CDTF( resultNode.@time ) );
+					
+							//Add the post to our array
+							result.push( post );						
+							
+						//And now add the result array to our model for binding	
+						model.postCollection = new ArrayCollection( result );					
+					}											
+				}			
+				trace( model.deliciousMessage );
+			//Trace the bs				
+			trace( "\nResult Headers: " + d_result.headers.toString() +
+			"\nResult Status Message: " + d_result.statusMessage +
+			"\nResult Status Code: " + d_result.statusCode +
+			"\nResult XML: " + d_result.result as XML );		
+		}		
+		
+			
+		/**
+		 * Handles the result.
+		 *  
+		 * @param event
+		 * 
+		 */		
+		private function onResult_setBundle( d_result:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			trace( d_result.result );			
+		}
+		
+		/**
+		 * Handles the reuslt for now
+		 *  
+		 * @param event
+		 * 
+		 */		
+		private function onResult_getBundles( d_result:ResultEvent ):void
+		{
+			model.readyForCall = true;
+					
+			CursorManager.removeBusyCursor();
+			trace( d_result.result );
+		}	
+		
+		/**
+		 * Handles the reuslt for now
+		 *  
+		 * @param event
+		 * 
+		 */		
+		private function onResult_removeBundle( d_result:ResultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			CursorManager.removeBusyCursor();
+			trace( d_result.result );
+		}
+		
+		 /**
+		  * Takes all the posts recieved from del.icio.us
+		  * and imports them into our database.
+		  *  
+		  * @param d_result the xml
+		  * 
+		  */		 
+		 private function onResult_importAllPosts( d_result:ResultEvent ):void
+		 {
+		 	model.readyForCall = true;
+		 	
+		 	//Remove Cursor
+		 	CursorManager.removeBusyCursor();		
+		 	
+		 	//Create a xml document
+		 	var xml:XMLDocument = new XMLDocument();
+		 		//gotta ignore the whitespace
+		 		xml.ignoreWhite = true;
+		 		//Parse that xml
+		 		xml.parseXML( d_result.result as XML );
+		 		
+		 		//Loop it
+		 		for each ( var item:XMLNode in xml.firstChild.childNodes )
+		 		{
+		 			//Import it
+		 			database.importPostXML( item, model.currentUser );
+		 			
+		 			trace( "\n\nXML Item: " + item );
+				}
+				trace( "\nImporting Data" );		
+		 }
+		
+		/**
+		 *  Handles the faults
+		 * 
+		 * @param event
+		 * 
+		 */				
+		private function onFault( event:FaultEvent ):void
+		{
+			model.readyForCall = true;
+			
+			//Add Code
+			 CursorManager.removeBusyCursor();
+			
+			//If Statement
+			if ( event.fault.faultCode == "401" )
+			{
+				//Alert the User
+				Alert.show( event.fault.faultString, event.fault.faultCode );
+				//Set logged in to false
+				model.isLoggedIn = false;
+				//Clear user
+				model.currentUser = null;				
+			}
+			//trace
+			trace( "\nFault Detail: " + event.fault.faultDetail + 
+					"\nFault Code: " + event.fault.faultCode +
+					"\nFault String: " + event.fault.faultString );
+		}	
+		
+	}
+}

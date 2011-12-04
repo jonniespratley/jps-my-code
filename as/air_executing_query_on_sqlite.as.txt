@@ -1,0 +1,136 @@
+/** *******************************************************************
+ * MySnippets
+ * Free for use
+ *
+ * @author  Jonnie Spratley
+ * @contact jonniespratley@gmail.com
+ ******************************************************************* */
+
+/**
+ * Saves a user to the database 
+ * @param user The current user
+ * 
+ */			
+public function saveUser( user:DeliciousUser ):void
+{				
+	var query:String = "INSERT INTO users ( user_name , user_pass , user_url ) " + 
+						"VALUES ( :username , :password , :url )";
+
+	sqlInsert = new SQLStatement();
+	sqlInsert.sqlConnection = dbconn;
+	sqlInsert.addEventListener( SQLEvent.RESULT, onSQLSave );
+	sqlInsert.addEventListener( SQLErrorEvent.ERROR, onSQLError );				
+	
+	sqlInsert.text = query;
+	sqlInsert.parameters[ ":username" ] = user.user_name
+	sqlInsert.parameters[ ":password" ] = user.user_pass
+	sqlInsert.parameters[ ":url" ] =      user.user_feed;
+	
+	sqlInsert.execute();
+	
+	trace( "Save user query: " + query );				
+}
+
+/**
+ * Retrieves all post for current user 
+ * @param user The current user that is logged in
+ * 
+ */			
+public function getPostsForUser( user:DeliciousUser ):void
+{
+	var query:String = "SELECT * FROM posts WHERE post_user = '" + user.user_name + "'";				
+
+	sqlQuery = new SQLStatement();
+	sqlQuery.sqlConnection = dbconn;				
+	sqlQuery.addEventListener( SQLErrorEvent.ERROR, onSQLError );
+	sqlQuery.addEventListener( SQLEvent.RESULT, onSQLResult_data );
+	
+	sqlQuery.text = query;
+	
+	sqlQuery.execute();
+	
+	trace( "Posts for User query: " + query );
+}
+
+/**
+ * Deletes a post by the ID 
+ * @param id
+ * 
+ */			 
+public function deletePost( id:Number ):void
+{
+	var query:String = "DELETE FROM posts" + 
+						"WHERE post_id = :post_id";
+			
+	sqlInsert = new SQLStatement();
+	sqlInsert.sqlConnection = dbconn;				
+	sqlInsert.addEventListener( SQLEvent.RESULT, onSQLSave );
+	sqlInsert.addEventListener( SQLErrorEvent.ERROR, onSQLError );			
+	
+	sqlInsert.text = query;
+	sqlInsert.parameters[ ":post_id" ] =  id;				
+	
+	sqlInsert.execute();
+	
+	trace( "Deleted post: " + id );						
+}
+
+/**
+ * Handles the DB Query result 
+ * @param event
+ * 
+ */			 
+private function onSQLResult_data( event:SQLEvent ):void
+{
+	var result:SQLResult = sqlQuery.getResult();
+	sqlData = new ArrayCollection();
+	
+}			
+
+			
+/**
+ * Handles the Insert result 
+ * @param event
+ * 
+ */			
+private function onSQLSave( event:SQLEvent ):void
+{
+	trace( "The record was successfully saved. " );
+}
+
+
+/**
+ * Handles the DB Open result 
+ * @param event
+ * 
+ */			
+private function onSQLOpen( event:SQLEvent ):void
+{
+	trace( "Database was opened successfully." );
+	
+}
+
+/**
+ * Hanles the DB Create result
+ * @param event
+ * 
+ */			
+private function onSQLCreate( event:SQLEvent ):void
+{
+	trace( "Database was created successfully." );
+	createPostTable();
+	createTagTable();
+	createUserTable();
+}
+
+/**
+ * Handles the DB Error result 
+ * @param event
+ * 
+ */			
+private function onSQLError( event:SQLErrorEvent ):void
+{
+	var errorString:String = "SQL Error: " + event.error.errorID + "\nDetails: " + event.error.details;
+	trace( errorString );
+}
+			

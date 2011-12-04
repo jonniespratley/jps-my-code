@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml">	
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import com.jonniespratley.advguidetoflex.webapis.DeliciousService;
+			import com.jonniespratley.advguidetoflex.model.DeliciousUser;
+			
+			[Bindable] public var deliciousUser:DeliciousUser;
+			[Bindable] public var tagDataProvider:ArrayCollection;
+			
+			private var service:DeliciousService = new DeliciousService();			
+			
+			private function renameTag():void
+			{
+				service.renameTag( deliciousUser, txt_oldtag.selectedLabel, txt_newtag.text );
+			}
+			
+			private function deleteTag():void
+			{
+				service.deleteTag( deliciousUser, txt_oldtag.selectedLabel );
+			}
+		]]>
+	</mx:Script>
+	<mx:Form width="100%" height="100%">
+		<mx:FormHeading label="Rename Tags"/>
+		<mx:FormItem label="Old Tag:">
+			<mx:ComboBox id="txt_oldtag" 
+				dataProvider="{ tagDataProvider }" 
+				labelField="tag_name"/>
+		</mx:FormItem>
+		<mx:FormItem label="New Tag:" required="true">
+			<mx:TextInput id="txt_newtag"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Button label="Save" click="renameTag()"/>
+			<mx:Button label="Remove" click="deleteTag()"/>
+		</mx:FormItem>
+	</mx:Form>
+</mx:VBox>
